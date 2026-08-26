@@ -1,0 +1,4045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Aventra Video Studio</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body { overflow-y:auto !important; min-height:100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: white;
+    }
+
+    header {
+      padding: 18px;
+      text-align: center;
+      background: #111936;
+      border-bottom: 1px solid #26304f;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #aeb8d8;
+      font-size: 14px;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 700px;
+      margin: 25px auto;
+    }
+
+    .card {
+      background: #121a35;
+      border: 1px solid #293354;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .upload {
+      border: 2px dashed #58658f;
+      border-radius: 14px;
+      padding: 30px 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .upload input {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    video {
+      width: 100%;
+      max-height: 380px;
+      margin-top: 20px;
+      border-radius: 12px;
+      background: black;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #c8d0ea;
+      font-size: 14px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #39466d;
+      border-radius: 9px;
+      background: #0c1329;
+      color: white;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #5865f2;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 15px;
+      text-align: center;
+      color: #b9c3e5;
+    }
+
+    .download {
+      display: block;
+      margin-top: 15px;
+      padding: 13px;
+      text-align: center;
+      background: #172342;
+      border-radius: 10px;
+      color: white;
+      text-decoration: none;
+    }
+
+    @media (max-width: 550px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    .feature-nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      margin: 0 auto;
+      background: #0b1020;
+      border-bottom: 1px solid #26304f;
+    }
+
+    .feature-nav a {
+      flex: 1;
+      padding: 11px 6px;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+      background: #172342;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .feature-nav a:active {
+      background: #5865f2;
+    }
+
+    .top-btn {
+      position: fixed;
+      right: 18px;
+      bottom: 20px;
+      z-index: 999;
+      width: 48px;
+      height: 48px;
+      margin: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: #5865f2;
+      box-shadow: 0 4px 15px rgba(0,0,0,.35);
+    }
+
+    html { overflow-y:auto !important; min-height:100%;
+      scroll-behavior: smooth;
+      scroll-padding-top: 70px;
+    }
+
+  
+    .feature-card {
+      display: none !important;
+    }
+
+    .feature-card.active {
+      display: block !important;
+    }
+
+    .tab-btn.active {
+      background: #5865f2;
+    }
+
+  
+    /* =========================
+       Advanced Effects UI
+       ========================= */
+
+    .effect-presets {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .effect-presets .preset-btn {
+      margin-top: 0;
+      padding: 12px 8px;
+      background: #172342;
+      border: 1px solid #39466d;
+    }
+
+    .effect-presets .preset-btn.active {
+      background: #5865f2;
+      border-color: #7c83ff;
+    }
+
+    .effect-control {
+      margin-top: 18px;
+    }
+
+    .effect-control label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .effect-control label span {
+      color: #8f9cff;
+      font-weight: bold;
+    }
+
+    .effect-control input[type="range"] {
+      width: 100%;
+      accent-color: #5865f2;
+    }
+
+    @media (max-width: 550px) {
+      .effect-presets {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+</style>
+
+<style>
+#mergeResult {
+  display: none !important;
+}
+</style>
+
+
+<style id="auth-feature-lock-css">
+body.auth-locked .feature-card,
+body.auth-locked .feature-nav {
+  display: none !important;
+}
+</style>
+
+</head>
+
+<body>
+
+
+<!-- ============================
+     Aventra User Authentication
+     ============================ -->
+
+<div id="authSection" style="
+  max-width:520px;
+  margin:30px auto;
+  padding:25px;
+  background:#111a35;
+  border:1px solid #39466d;
+  border-radius:15px;
+">
+
+  <h2 id="authTitle" style="text-align:center;">
+    🔐 Login to Aventra
+  </h2>
+
+  <div id="signupNameBox" style="display:none;">
+    <label>👤 Name</label>
+    <input
+      id="authName"
+      type="text"
+      placeholder="Your name"
+      style="width:100%;padding:12px;margin:8px 0 15px;"
+    >
+  </div>
+
+  <label>📧 Email</label>
+  <input
+    id="authEmail"
+    type="email"
+    placeholder="you@example.com"
+    style="width:100%;padding:12px;margin:8px 0 15px;"
+  >
+
+  <label>🔑 Password</label>
+  <input
+    id="authPassword"
+    type="password"
+    placeholder="Minimum 6 characters"
+    style="width:100%;padding:12px;margin:8px 0 15px;"
+  >
+
+  <button
+    id="authBtn"
+    style="width:100%;padding:13px;"
+  >
+    🔐 Login
+  </button>
+
+  <p
+    id="authStatus"
+    style="text-align:center;margin-top:15px;"
+  ></p>
+
+  <p style="text-align:center;">
+    <button
+      type="button"
+      id="authSwitchBtn"
+      style="
+        background:none;
+        border:none;
+        color:#8f9cff;
+        cursor:pointer;
+      "
+    >
+      Create an account
+    </button>
+  </p>
+
+</div>
+
+<div
+  id="userBar"
+  style="
+    display:none;
+    max-width:900px;
+    margin:15px auto;
+    padding:12px 18px;
+    background:#111a35;
+    border:1px solid #39466d;
+    border-radius:12px;
+    text-align:center;
+  "
+>
+  👤 <span id="loggedUserName"></span>
+  &nbsp; | &nbsp;
+  📧 <span id="loggedUserEmail"></span>
+  &nbsp; | &nbsp;
+  ⭐ Plan: <strong id="loggedUserPlan">Free</strong>
+  &nbsp;
+  <button id="logoutBtn">
+    Logout
+  </button>
+</div>
+
+<header>
+  <h1>🎬 Aventra Video Studio</h1>
+  <p>Simple & Powerful Video Editor</p>
+</header>
+
+<nav class="feature-nav">
+  <a href="#trimSection" class="tab-btn active" data-tab="trimSection">✂️ Trim</a>
+  <a href="#mergeSection" class="tab-btn" data-tab="mergeSection">🔀 Merge</a>
+  <a href="#musicSection" class="tab-btn" data-tab="musicSection">🎵 Music</a>
+  <a href="#textSection" class="tab-btn" data-tab="textSection">📝 Text</a>
+  <a href="#effectsSection" class="tab-btn" data-tab="effectsSection">🎨 Effects</a>
+  <a href="#stickerSection" class="tab-btn" data-tab="stickerSection">🎟️ Sticker</a>
+  <a href="#animationSection" class="tab-btn" data-tab="animationSection">🎬 Animation</a>
+  <a href="#youtubeAutomationSection" class="tab-btn" data-tab="youtubeAutomationSection" onclick="activateFeatureTab('youtubeAutomationSection'); return false;">🤖 YouTube Automation</a>
+</nav>
+
+
+<div class="container">
+
+<!-- ============================
+     YouTube Automation
+     ============================ -->
+
+<section class="card feature-card active" id="youtubeAutomationSection">
+
+  <h2>🎬 YouTube Automation</h2>
+
+  <p style="color:#aeb8d8;">
+    Create a complete YouTube script with AI.
+  </p>
+
+  <label style="display:block;margin-top:15px;">Category</label>
+  <select
+    id="youtubeCategory"
+    style="width:100%;padding:12px;margin-top:6px;"
+  >
+    <option value="Pakistan History">🇵🇰 Pakistan History</option>
+    <option value="Strange Places">🌍 Strange Places</option>
+    <option value="Business and Finance">💰 Business / Finance</option>
+    <option value="AI and Technology">🤖 AI & Technology</option>
+    <option value="Education">📚 Educational</option>
+    <option value="Facts and Knowledge">🧠 Facts / Knowledge</option>
+    <option value="Sports">🏆 Sports</option>
+    <option value="Space">🌌 Space</option>
+    <option value="Historical Documentary">🏛️ Historical Documentary</option>
+    <option value="Travel">✈️ Travel</option>
+    <option value="Cooking">🍳 Cooking</option>
+    <option value="Stories">📖 Stories</option>
+    <option value="Custom">✏️ Custom Topic</option>
+  </select>
+
+  <label style="display:block;margin-top:15px;">Topic</label>
+  <input
+    id="youtubeTopic"
+    type="text"
+    placeholder="مثلاً: پاکستان کی 10 خوبصورت جگہیں"
+    style="width:100%;padding:12px;margin-top:6px;"
+  >
+
+  <label style="display:block;margin-top:15px;">Language</label>
+  <select id="youtubeLanguage" style="width:100%;padding:12px;margin-top:6px;">
+    <option value="Urdu">Urdu</option>
+    <option value="English">English</option>
+    <option value="Arabic">Arabic</option>
+  </select>
+
+  <label style="display:block;margin-top:15px;">Duration</label>
+  <select id="youtubeDuration" style="width:100%;padding:12px;margin-top:6px;">
+    <option value="3">3 Minutes</option>
+    <option value="5">5 Minutes</option>
+    <option value="10">10 Minutes</option>
+    <option value="15">15 Minutes</option>
+    <option value="20">20 Minutes</option>
+  </select>
+
+  <label style="display:block;margin-top:15px;">Style</label>
+  <select id="youtubeStyle" style="width:100%;padding:12px;margin-top:6px;">
+    <option value="Documentary">Documentary</option>
+    <option value="Educational">Educational</option>
+    <option value="Storytelling">Storytelling</option>
+    <option value="News">News</option>
+  </select>
+
+  <button
+    id="generateYoutubeScriptBtn"
+    style="width:100%;padding:14px;margin-top:20px;cursor:pointer;"
+  >
+    🚀 Generate YouTube Script
+  </button>
+
+  <div
+    id="youtubeScriptStatus"
+    style="margin-top:15px;color:#aeb8d8;"
+  ></div>
+
+  <textarea
+    id="youtubeScriptOutput"
+    placeholder="AI generated script will appear here..."
+    style="width:100%;min-height:400px;margin-top:15px;padding:15px;resize:vertical;"
+  ></textarea>
+
+  <button
+    id="generateYoutubeVoiceBtn"
+    style="width:100%;padding:14px;margin-top:15px;cursor:pointer;"
+  >
+    🎙️ Generate Urdu Voice
+  </button>
+
+  <div
+    id="youtubeVoiceStatus"
+    style="margin-top:12px;color:#aeb8d8;"
+  ></div>
+
+  <audio
+    id="youtubeVoicePlayer"
+    controls
+    style="width:100%;margin-top:15px;display:none;"
+  ></audio>
+
+  <button
+    id="generateYoutubeScenesBtn"
+    style="width:100%;padding:14px;margin-top:15px;cursor:pointer;"
+  >
+    🎞️ Generate Scenes
+  </button>
+
+  <div
+    id="youtubeScenesStatus"
+    style="margin-top:12px;color:#aeb8d8;"
+  ></div>
+
+  <textarea
+    id="youtubeScenesOutput"
+    readonly
+    placeholder="AI scene data will appear here..."
+    style="width:100%;min-height:180px;margin-top:15px;padding:15px;resize:vertical;"
+  ></textarea>
+
+  <button
+    id="generateYoutubeImagesBtn"
+    style="width:100%;padding:14px;margin-top:15px;cursor:pointer;"
+  >
+    🖼️ Generate Scene Images
+  </button>
+
+  <div
+    id="youtubeImagesStatus"
+    style="margin-top:12px;color:#aeb8d8;"
+  ></div>
+
+  <div
+    id="youtubeImagesPreview"
+    style="margin-top:15px;"
+  ></div>
+
+  <button
+    id="createYoutubeVideoBtn"
+    style="width:100%;padding:16px;margin-top:20px;cursor:pointer;font-weight:bold;"
+  >
+    🎬 Create Final YouTube Video
+  </button>
+
+  <button
+    id="oneClickYoutubeBtn"
+    style="width:100%;padding:16px;margin-top:15px;cursor:pointer;font-size:16px;"
+  >
+    🚀 Generate Complete YouTube Video
+  </button>
+
+  <div
+    id="oneClickYoutubeStatus"
+    style="margin-top:12px;color:#aeb8d8;"
+  ></div>
+
+    
+
+  
+
+  <div
+    id="youtubeVideoStatus"
+    style="margin-top:12px;color:#aeb8d8;"
+  ></div>
+
+  <video
+    id="youtubeFinalVideo"
+    controls
+    playsinline
+    style="width:100%;margin-top:15px;display:none;"
+  ></video>
+
+  <a
+    id="youtubeFinalVideoLink"
+    href="#"
+    target="_blank"
+    style="display:none;margin-top:12px;text-align:center;"
+  >
+    📥 Open Final YouTube Video
+  </a>
+
+
+  <!-- YouTube Thumbnail Generator -->
+  <div class="card" id="youtubeThumbnailSection"
+       style="margin-top:20px;">
+
+    <h2>🖼️ YouTube Thumbnail</h2>
+
+    <p style="color:#aeb8d8;">
+      Create an attractive AI thumbnail for your YouTube video.
+    </p>
+
+    <input
+      id="youtubeThumbnailPrompt"
+      type="text"
+      placeholder="مثلاً: موہنجو دڑو کی پراسرار قدیم تہذیب"
+      style="width:100%;padding:12px;margin-top:10px;"
+    >
+
+    <button
+      id="generateYoutubeThumbnailBtn"
+      style="width:100%;padding:14px;margin-top:15px;cursor:pointer;"
+    >
+      🖼️ Generate YouTube Thumbnail
+    </button>
+
+    <div
+      id="youtubeThumbnailStatus"
+      style="margin-top:12px;color:#aeb8d8;"
+    ></div>
+
+    <img
+      id="youtubeThumbnailPreview"
+      alt="YouTube Thumbnail"
+      style="width:100%;margin-top:15px;display:none;border-radius:8px;"
+    >
+
+    <a
+      id="youtubeThumbnailLink"
+      href="#"
+      target="_blank"
+      style="display:none;margin-top:12px;text-align:center;"
+    >
+      🔗 Open Thumbnail
+    </a>
+
+  </div>
+
+  <!-- ============================
+       YouTube SEO Generator
+       ============================ -->
+  <div class="card" id="youtubeSeoSection"
+       style="margin-top:20px;">
+
+    <h2>🔎 YouTube SEO Generator</h2>
+
+    <p style="color:#aeb8d8;">
+      Generate SEO title, description, keywords, tags and hashtags automatically.
+    </p>
+
+    <button
+      id="generateYoutubeSeoBtn"
+      style="width:100%;padding:16px;margin-top:15px;cursor:pointer;font-size:16px;font-weight:bold;"
+    >
+      🚀 Generate YouTube SEO
+    </button>
+
+    <div
+      id="youtubeSeoStatus"
+      style="margin-top:12px;color:#aeb8d8;"
+    ></div>
+
+    <label style="display:block;margin-top:15px;">
+      🎯 SEO Title
+    </label>
+
+    <input
+      id="youtubeSeoTitle"
+      type="text"
+      readonly
+      style="width:100%;padding:12px;margin-top:6px;"
+    >
+
+    <label style="display:block;margin-top:15px;">
+      📝 Description
+    </label>
+
+    <textarea
+      id="youtubeSeoDescription"
+      readonly
+      style="width:100%;min-height:180px;margin-top:6px;padding:12px;resize:vertical;"
+    ></textarea>
+
+    <label style="display:block;margin-top:15px;">
+      🔑 Keywords
+    </label>
+
+    <textarea
+      id="youtubeSeoKeywords"
+      readonly
+      style="width:100%;min-height:100px;margin-top:6px;padding:12px;resize:vertical;"
+    ></textarea>
+
+    <label style="display:block;margin-top:15px;">
+      🏷️ Tags
+    </label>
+
+    <textarea
+      id="youtubeSeoTags"
+      readonly
+      style="width:100%;min-height:100px;margin-top:6px;padding:12px;resize:vertical;"
+    ></textarea>
+
+    <label style="display:block;margin-top:15px;">
+      #️⃣ Hashtags
+    </label>
+
+    <textarea
+      id="youtubeSeoHashtags"
+      readonly
+      style="width:100%;min-height:80px;margin-top:6px;padding:12px;resize:vertical;"
+    ></textarea>
+
+    <button
+      id="copyYoutubeSeoBtn"
+      style="width:100%;padding:14px;margin-top:15px;cursor:pointer;"
+    >
+      📋 Copy All SEO
+    </button>
+
+    <div
+      id="copyYoutubeSeoStatus"
+      style="margin-top:10px;color:#aeb8d8;"
+    ></div>
+
+  </div>
+
+</section>
+
+
+  <div class="card" id="videoUploadCard">
+
+    <div class="upload">
+      <strong>📁 Select a Video</strong>
+      <p>MP4, WebM, MOV and other video formats</p>
+
+      <input
+        type="file"
+        id="videoInput"
+        accept="video/*"
+      >
+    </div>
+
+    <video
+      id="preview"
+      controls
+      style="display:none;"
+    ></video>
+
+  </div>
+
+  <div class="card feature-card" id="trimSection">
+
+    <h2>✂️ Trim Video</h2>
+
+    <div class="controls">
+
+      <div>
+        <label>Start Time (seconds)</label>
+
+        <input
+          type="number"
+          id="startTime"
+          value="0"
+          min="0"
+          step="0.1"
+        >
+      </div>
+
+      <div>
+        <label>Duration (seconds)</label>
+
+        <input
+          type="number"
+          id="duration"
+          value="5"
+          min="0.1"
+          step="0.1"
+        >
+      </div>
+
+    </div>
+
+    <button id="trimBtn">
+      ✂️ Trim Video
+    </button>
+
+    <div id="status"></div>
+
+  </div>
+
+  <div
+    class="card"
+    id="resultCard"
+    style="display:none;"
+  >
+
+    <h2>🎬 Current Video</h2>
+
+    <video
+      id="resultVideo"
+      controls
+    ></video>
+
+    <a
+      id="downloadLink"
+      class="download"
+      download
+    >
+      📥 Download Video
+    </a>
+
+  </div>
+
+
+<div class="card feature-card" id="mergeSection">
+  <h2>🔀 Merge Videos</h2>
+  <p style="color:#aeb8d8;">
+    Select 2 or more videos and combine them into one video.
+  </p>
+
+  <input type="file" id="mergeInput" accept="video/*" multiple>
+
+  <div id="mergeFiles" style="margin-top:15px;color:#c8d0ea;"></div>
+
+  <button id="mergeBtn">
+    🔀 Merge Videos
+  </button>
+
+  <div id="mergeStatus" style="margin-top:15px;text-align:center;"></div>
+
+  <div id="mergeResult" style="display:none;margin-top:20px;">
+    <video id="mergedVideo" controls style="width:100%;border-radius:12px;"></video>
+
+    <a id="mergedDownload" class="download" download>
+      📥 Download Merged Video
+    </a>
+  </div>
+</div>
+
+</div>
+
+
+<div class="card feature-card" id="effectsSection">
+
+  <h2>🎨 Advanced Effects</h2>
+
+  <p style="color:#aeb8d8;">
+    Professional filters, cinematic presets and manual video controls.
+  </p>
+  <p style="color:#7f8db8;font-size:14px;">
+    🎬 Current Video will be used automatically
+  </p>
+
+
+  <h3>🎞️ Professional Presets</h3>
+
+  <div class="effect-presets">
+
+    <button type="button" class="preset-btn" data-preset="none">
+      Original
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="cinematic">
+      🎬 Cinematic
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="vintage">
+      🎞️ Vintage
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="noir">
+      🖤 Noir
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="warm">
+      🔥 Warm
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="cool">
+      ❄️ Cool
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="vibrant">
+      🌈 Vibrant
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="night">
+      🌙 Night
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="dream">
+      💭 Dream
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="film">
+      🎞️ Film
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="retro">
+      📼 Retro
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="bwpro">
+      🖤 B&W Pro
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="glitch">
+      ⚡ Glitch
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="sunset">
+      🌅 Sunset
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="arctic">
+      ❄️ Arctic
+    </button>
+
+    <button type="button" class="preset-btn" data-preset="cinematicpro">
+      🎬 Cinematic Pro
+    </button>
+
+  </div>
+
+  <h3 style="margin-top:25px;">✨ Advanced FX</h3>
+
+<div class="effect-control">
+  <label>🌈 RGB Split <span id="rgbSplitValue">0</span></label>
+  <input type="range" id="effectRgbSplit"
+    min="0" max="20" step="1" value="0">
+</div>
+
+<div class="effect-control">
+  <label>💡 Glow <span id="glowValue">0</span></label>
+  <input type="range" id="effectGlow"
+    min="0" max="10" step="0.5" value="0">
+</div>
+
+<div class="effect-control">
+  <label>🧩 Pixelate <span id="pixelateValue">0</span></label>
+  <input type="range" id="effectPixelate"
+    min="0" max="20" step="1" value="0">
+</div>
+
+<div class="effect-control">
+  <label>📺 Scanlines <span id="scanlinesValue">0</span></label>
+  <input type="range" id="effectScanlines"
+    min="0" max="1" step="0.05" value="0">
+</div>
+
+
+<h3 style="margin-top:25px;">🎨 Pro Color Controls</h3>
+
+<div class="effect-control">
+  <label>🌡️ Temperature <span id="temperatureValue">0</span></label>
+  <input type="range" id="effectTemperature"
+    min="-100" max="100" step="1" value="0">
+</div>
+
+<div class="effect-control">
+  <label>🌈 Hue <span id="hueValue">0</span></label>
+  <input type="range" id="effectHue"
+    min="-180" max="180" step="1" value="0">
+</div>
+
+<div class="effect-control">
+  <label>☀️ Highlights <span id="highlightsValue">0</span></label>
+  <input type="range" id="effectHighlights"
+    min="-1" max="1" step="0.05" value="0">
+</div>
+
+<div class="effect-control">
+  <label>🌑 Shadows <span id="shadowsValue">0</span></label>
+  <input type="range" id="effectShadows"
+    min="-1" max="1" step="0.05" value="0">
+</div>
+
+<div class="effect-control">
+  <label>🎬 Cinematic Bars <span id="barsValue">0</span></label>
+  <input type="range" id="effectBars"
+    min="0" max="1" step="0.05" value="0">
+</div>
+
+<h3 style="margin-top:25px;">🎛️ Manual Adjustments</h3>
+
+  <div class="effect-control">
+    <label>
+      Brightness
+      <span id="brightnessValue">0</span>
+    </label>
+    <input type="range" id="effectBrightness"
+      min="-1" max="1" step="0.05" value="0">
+  </div>
+
+  <div class="effect-control">
+    <label>
+      Contrast
+      <span id="contrastValue">1.00</span>
+    </label>
+    <input type="range" id="effectContrast"
+      min="0" max="3" step="0.05" value="1">
+  </div>
+
+  <div class="effect-control">
+    <label>
+      Saturation
+      <span id="saturationValue">1.00</span>
+    </label>
+    <input type="range" id="effectSaturation"
+      min="0" max="3" step="0.05" value="1">
+  </div>
+
+  <div class="effect-control">
+    <label>
+      🌫️ Blur
+      <span id="blurValue">0</span>
+    </label>
+    <input type="range" id="effectBlur"
+      min="0" max="20" step="0.5" value="0">
+  </div>
+
+  <div class="effect-control">
+    <label>
+      ✨ Sharpen
+      <span id="sharpenValue">0</span>
+    </label>
+    <input type="range" id="effectSharpen"
+      min="0" max="5" step="0.1" value="0">
+  </div>
+
+  <div class="effect-control">
+    <label>
+      🌑 Vignette
+      <span id="vignetteValue">0</span>
+    </label>
+    <input type="range" id="effectVignette"
+      min="0" max="1" step="0.05" value="0">
+  </div>
+
+  <div class="effect-control">
+    <label>
+      🎞️ Film Grain
+      <span id="grainValue">0</span>
+    </label>
+    <input type="range" id="effectGrain"
+      min="0" max="1" step="0.05" value="0">
+  </div>
+
+  <button id="effectsBtn">
+    🎨 Apply Effects
+  </button>
+
+  <div id="effectsStatus"
+       style="margin-top:15px;text-align:center;">
+  </div>
+
+    <div style="
+      display:flex;
+      gap:10px;
+      margin-top:15px;
+      flex-wrap:wrap;
+    ">
+
+      <button type="button" id="comparePlayBtn">
+        ▶️ Play Both
+      </button>
+
+      <button type="button" id="comparePauseBtn">
+        ⏸️ Pause Both
+      </button>
+
+      <button type="button" id="compareResetBtn">
+        🔄 Reset
+      </button>
+
+    </div>
+
+    <a
+      id="effectsDownload"
+      class="download"
+      download
+      style="display:block;margin-top:15px;">
+      📥 Download Video
+    </a>
+
+  </div>
+
+</div>
+
+
+
+<div class="card feature-card" id="stickerSection">
+
+
+<style>
+.builtin-sticker {
+  margin: 0 !important;
+  padding: 10px 5px !important;
+  min-height: 75px;
+  background: #172342 !important;
+  border: 1px solid #39466d !important;
+  border-radius: 10px !important;
+  font-size: 28px !important;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.builtin-sticker span {
+  font-size: 11px;
+  color: #aeb8d8;
+}
+
+
+.sticker-category {
+  white-space: nowrap;
+  padding: 8px 14px;
+  border: 1px solid #39466d;
+  border-radius: 20px;
+  background: #172342;
+  color: #aeb8d8;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.sticker-category.active {
+  background: #5865f2;
+  color: white;
+  border-color: #7c83ff;
+}
+
+.builtin-sticker.selected {
+  background: #5865f2 !important;
+  border-color: #7c83ff !important;
+  transform: scale(1.03);
+}
+</style>
+
+  <h2>🎟️ Add Sticker</h2>
+
+  <p style="color:#aeb8d8;">
+    Add a sticker or transparent image to your video.
+  </p>
+
+  <p style="color:#7f8db8;font-size:14px;">
+    🎬 Current Video will be used automatically
+  </p>
+
+  <label>🎟️ Built-in Stickers</label>
+
+  <div style="display:flex;gap:8px;overflow-x:auto;margin-top:12px;margin-bottom:12px;">
+    <button type="button" class="sticker-category active">📱 Social</button>
+    <button type="button" class="sticker-category">❤️ Reactions</button>
+    <button type="button" class="sticker-category">✨ Fun</button>
+    <button type="button" class="sticker-category">➡️ Arrows</button>
+  </div>
+
+  <div id="builtinStickerGrid"
+       style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;">
+
+    <button type="button" class="builtin-sticker" data-sticker="like" data-category="social">👍<span>Like</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="love" data-category="reactions">❤️<span>Love</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="subscribe" data-category="social">🔔<span>Subscribe</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="follow" data-category="social">👆<span>Follow</span></button>
+
+    <button type="button" class="builtin-sticker" data-sticker="comment" data-category="social">💬<span>Comment</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="fire" data-category="fun">🔥<span>Fire</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="star" data-category="fun">⭐<span>Star</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="party" data-category="fun">🎉<span>Party</span></button>
+
+    <button type="button" class="builtin-sticker" data-sticker="hundred" data-category="reactions">💯<span>100</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="arrow" data-category="arrows">➡️<span>Arrow</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="check" data-category="arrows">✅<span>Check</span></button>
+    <button type="button" class="builtin-sticker" data-sticker="wow" data-category="reactions">😮<span>Wow</span></button>
+
+  </div>
+
+  <div id="selectedBuiltinSticker"
+       style="margin-top:10px;color:#8f9cff;text-align:center;">
+    No built-in sticker selected
+  </div>
+
+  <label style="display:block;margin-top:18px;">
+    🖼️ Upload Your Own Sticker
+  </label>
+
+  <input
+    type="file"
+    id="stickerFile"
+    accept="image/png,image/jpeg,image/webp"
+  >
+
+  <label style="display:block;margin-top:18px;">
+    📍 Sticker Position
+  </label>
+
+  <select
+    id="stickerPosition"
+    style="width:100%;padding:12px;border:1px solid #39466d;border-radius:9px;background:#0c1329;color:white;font-size:16px;"
+  >
+    <option value="topleft">↖️ Top Left</option>
+    <option value="top" selected>⬆️ Top Center</option>
+    <option value="topright">↗️ Top Right</option>
+    <option value="center">⏺️ Center</option>
+    <option value="bottomleft">↙️ Bottom Left</option>
+    <option value="bottom">⬇️ Bottom Center</option>
+    <option value="bottomright">↘️ Bottom Right</option>
+  </select>
+
+  <label style="display:block;margin-top:18px;">
+    📏 Sticker Size
+  </label>
+
+  <input
+    type="range"
+    id="stickerSize"
+    min="50"
+    max="1000"
+    step="10"
+    value="300"
+    style="width:100%;"
+  >
+
+  <div
+    id="stickerSizeValue"
+    style="text-align:center;margin-top:5px;"
+  >
+    300 px
+  </div>
+
+  <label style="display:block;margin-top:18px;">
+    👁️ Sticker Opacity
+  </label>
+
+  <input
+    type="range"
+    id="stickerOpacity"
+    min="0"
+    max="1"
+    step="0.1"
+    value="1"
+    style="width:100%;"
+  >
+
+  <div
+    id="stickerOpacityValue"
+    style="text-align:center;margin-top:5px;"
+  >
+    100%
+  </div>
+
+  <button id="stickerBtn">
+    🎟️ Add Sticker
+  </button>
+
+  <div
+    id="stickerStatus"
+    style="margin-top:15px;text-align:center;"
+  ></div>
+
+</div>
+
+<div class="card feature-card" id="animationSection">
+
+  <h2>🎬 Video Animation</h2>
+
+  <p style="color:#aeb8d8;">
+    Add smooth animations to your current video.
+  </p>
+
+  <p style="color:#7f8db8;font-size:14px;">
+    🎬 Current Video will be used automatically
+  </p>
+
+  <label>✨ Animation</label>
+
+  <select
+    id="animationType"
+    style="width:100%;padding:12px;border:1px solid #39466d;border-radius:9px;background:#0c1329;color:white;font-size:16px;margin-top:5px;"
+  >
+    <option value="none">Original / None</option>
+    <option value="fadein">✨ Fade In</option>
+    <option value="fadeout">✨ Fade Out</option>
+    <option value="zoomin">🔍 Zoom In</option>
+    <option value="zoomout">🔍 Zoom Out</option>
+    <option value="slideleft">⬅️ Slide Left</option>
+    <option value="slideright">➡️ Slide Right</option>
+    <option value="slideup">⬆️ Slide Up</option>
+    <option value="slidedown">⬇️ Slide Down</option>
+    <option value="rotate">🔄 Rotate</option>
+    <option value="shake">📳 Shake</option>
+  </select>
+
+  <label style="display:block;margin-top:18px;">
+    ⏱️ Animation Duration
+  </label>
+
+  <input
+    type="number"
+    id="animationDuration"
+    value="1"
+    min="0.1"
+    max="10"
+    step="0.1"
+    style="width:100%;padding:12px;border:1px solid #39466d;border-radius:9px;background:#0c1329;color:white;font-size:16px;"
+  >
+
+  <span style="display:block;color:#7f8db8;font-size:13px;margin-top:5px;">
+    Duration in seconds
+  </span>
+
+  <button
+    type="button"
+    id="animationBtn"
+    style="width:100%;padding:12px;margin-top:18px;background:#5865f2;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;"
+  >
+    🎬 Apply Animation
+  </button>
+
+  <div
+    id="animationStatus"
+    style="margin-top:15px;text-align:center;font-weight:bold;"
+  ></div>
+
+  <a
+    id="animationDownload"
+    class="download"
+    download
+    style="display:none;margin-top:15px;"
+  >
+    📥 Download Animated Video
+  </a>
+
+</div>
+
+
+<div class="card feature-card" id="textSection">
+
+  <h2>📝 Add Text</h2>
+
+  <p style="color:#aeb8d8;">
+    Add captions or text to your video.
+  </p>
+  <p style="color:#7f8db8;font-size:14px;">
+    🎬 Current Video will be used automatically
+  </p>
+
+
+  <label>📝 Text</label>
+  <input
+    type="text"
+    id="overlayText"
+    placeholder="Enter your text"
+    style="width:100%;padding:12px;border:1px solid #39466d;border-radius:9px;background:#0c1329;color:white;font-size:16px;"
+  >
+
+  <div class="controls">
+
+    <div>
+      <label>🎨 Text Color</label>
+
+      <input
+        type="color"
+        id="textColor"
+        value="#ffffff"
+        style="width:100%;height:50px;padding:4px;border:1px solid #39466d;border-radius:9px;background:#0c1329;cursor:pointer;"
+      >
+    </div>
+
+    <div>
+      <label>📍 Position</label>
+
+      <select
+        id="textPosition"
+        style="width:100%;padding:12px;border:1px solid #39466d;border-radius:9px;background:#0c1329;color:white;font-size:16px;"
+      >
+        <option value="top">Top</option>
+        <option value="center" selected>Center</option>
+        <option value="bottom">Bottom</option>
+      </select>
+    </div>
+
+    <div>
+      <label>🔠 Font Size</label>
+
+      <input
+        type="number"
+        id="textSize"
+        value="32"
+        min="12"
+        max="120"
+      >
+    </div>
+
+  </div>
+
+  <button id="textBtn">
+    📝 Add Text
+  </button>
+
+  <div id="textStatus" style="margin-top:15px;text-align:center;"></div>
+
+
+</div>
+
+<div class="card feature-card" id="musicSection">
+  <h2>🎵 Add Music</h2>
+
+  <p style="color:#aeb8d8;">
+    Add your own music or audio to a video.
+  </p>
+  <p style="color:#7f8db8;font-size:14px;">
+    🎬 Current Video will be used automatically
+  </p>
+
+
+  <label>🎵 Select Music</label>
+  <input type="file" id="musicFile" accept="audio/*">
+
+  <label style="display:block;margin-top:18px;">
+    🔊 Music Volume
+  </label>
+
+  <input
+    type="range"
+    id="musicVolume"
+    
+    min="0"
+    max="3"
+    step="0.1"
+    value="1"
+    style="width:100%;"
+  >
+
+  <div id="volumeValue"
+       style="text-align:center;margin-top:5px;">
+    100%
+  </div>
+
+  <button id="musicBtn">
+    🎵 Add Music
+  </button>
+
+  <div id="musicStatus"
+       style="margin-top:15px;text-align:center;">
+  </div>
+
+  
+
+
+
+
+<script>
+
+const videoInput = document.getElementById("videoInput");
+const preview = document.getElementById("preview");
+const trimBtn = document.getElementById("trimBtn");
+const status = document.getElementById("status");
+
+const resultCard = document.getElementById("resultCard");
+const resultVideo = document.getElementById("resultVideo");
+const downloadLink = document.getElementById("downloadLink");
+
+let selectedVideo = null;
+let currentVideoUrl = null;
+let currentVideoFile = null;
+
+function setCurrentVideo(url) {
+  currentVideoUrl = url;
+
+  // Hide the original upload preview after processing
+  if (preview) {
+    preview.pause();
+    preview.style.display = "none";
+  }
+
+  // Show only the latest processed/current video
+  resultCard.style.display = "block";
+  resultVideo.src = url;
+  resultVideo.load();
+
+  downloadLink.href = url;
+
+  console.log("🎬 CURRENT VIDEO UPDATED:", url);
+}
+
+async function videoUrlToFile(url, filename = "current-video.mp4") {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Could not load current video.");
+  }
+
+  const blob = await response.blob();
+
+  return new File([blob], filename, {
+    type: blob.type || "video/mp4"
+  });
+}
+
+
+
+// ======================
+// Select Video
+// ======================
+
+videoInput.addEventListener("change", () => {
+
+  const file = videoInput.files[0];
+
+  if (!file) return;
+
+  selectedVideo = file;
+  currentVideoFile = file;
+
+  const url = URL.createObjectURL(file);
+
+  currentVideoUrl = url;
+
+  preview.src = url;
+  preview.style.display = "block";
+
+  status.textContent =
+    `Selected: ${file.name}`;
+
+});
+
+
+// ======================
+// Trim Video
+// ======================
+
+trimBtn.addEventListener("click", async () => {
+  trimBtn.disabled = true;
+
+  try {
+    let trimInputVideo = null;
+
+    if (currentVideoFile) {
+      trimInputVideo = currentVideoFile;
+    } else if (selectedVideo) {
+      trimInputVideo = selectedVideo;
+    } else {
+      alert("Please select a video first.");
+      return;
+    }
+
+    const startTime =
+      document.getElementById("startTime").value;
+
+    const duration =
+      document.getElementById("duration").value;
+
+    if (Number(startTime) < 0 || Number(duration) <= 0) {
+      alert("Enter valid trim values.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append(
+      "video",
+      trimInputVideo
+    );
+
+    formData.append(
+      "start",
+      startTime
+    );
+
+    formData.append(
+      "duration",
+      duration
+    );
+
+    status.textContent =
+      "⏳ Processing current video...";
+
+    const response = await fetch(
+      "/api/video/trim",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Video processing failed"
+      );
+    }
+
+    setCurrentVideo(data.videoUrl);
+
+    // Keep the processed video as the new input for all next features
+    currentVideoFile = await videoUrlToFile(
+      data.videoUrl,
+      "current-video.mp4"
+    );
+
+    downloadLink.href =
+      data.videoUrl;
+
+    status.textContent =
+      "✅ Video trimmed successfully!";
+
+  } catch (error) {
+    console.error("❌ TRIM ERROR:", error);
+
+    status.textContent =
+      "❌ " + error.message;
+
+  } finally {
+    trimBtn.disabled = false;
+  }
+});
+
+// ======================
+// Aventra Merge Videos
+// ======================
+
+const mergeInput = document.getElementById("mergeInput");
+const mergeFiles = document.getElementById("mergeFiles");
+const mergeBtn = document.getElementById("mergeBtn");
+const mergeStatus = document.getElementById("mergeStatus");
+const mergeResult = document.getElementById("mergeResult");
+const mergedVideo = document.getElementById("mergedVideo");
+const mergedDownload = document.getElementById("mergedDownload");
+
+mergeInput.addEventListener("change", () => {
+  const files = Array.from(mergeInput.files);
+
+  if (files.length < 2) {
+    mergeFiles.textContent = "⚠️ Please select at least 2 videos.";
+    return;
+  }
+
+  mergeFiles.innerHTML = files.map((file, index) =>
+    `${index + 1}. ${file.name}`
+  ).join("<br>");
+});
+
+mergeBtn.addEventListener("click", async () => {
+  const files = Array.from(mergeInput.files);
+
+  if (files.length < 2) {
+    alert("Please select at least 2 videos.");
+    return;
+  }
+
+  const formData = new FormData();
+
+  files.forEach(file => {
+    formData.append("videos", file);
+  });
+
+  mergeBtn.disabled = true;
+  mergeStatus.textContent = "⏳ Merging videos...";
+
+  try {
+    const response = await fetch("/api/video/merge", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "Merge failed");
+    }
+
+    setCurrentVideo(data.videoUrl);
+    mergedVideo.src = data.videoUrl;
+    mergedDownload.href = data.videoUrl;
+
+    mergeStatus.textContent =
+      "✅ Videos merged successfully!";
+
+  } catch (error) {
+    console.error(error);
+    mergeStatus.textContent = "❌ " + error.message;
+  }
+
+  mergeBtn.disabled = false;
+});
+
+
+// ======================
+// Aventra Add Music
+// ======================
+
+const musicVideo = document.getElementById("musicVideo");
+const musicFile = document.getElementById("musicFile");
+const musicVolume = document.getElementById("musicVolume");
+const volumeValue = document.getElementById("volumeValue");
+const musicBtn = document.getElementById("musicBtn");
+const musicStatus = document.getElementById("musicStatus");
+
+
+const musicDownload = document.getElementById("musicDownload");
+
+if (musicFile && musicVolume && volumeValue && musicBtn) {
+
+  musicVolume.addEventListener("input", () => {
+    volumeValue.textContent =
+      Math.round(Number(musicVolume.value) * 100) + "%";
+  });
+
+  musicBtn.addEventListener("click", async () => {
+
+    let musicInputVideo = null;
+
+    if (currentVideoUrl) {
+      musicInputVideo = await videoUrlToFile(
+        currentVideoUrl,
+        "current-video.mp4"
+      );
+    } else {
+      alert("Please upload a video first.");
+      return;
+    }
+
+    if (!musicFile.files[0]) {
+      alert("Please select music.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("video", musicInputVideo);
+    formData.append("music", musicFile.files[0]);
+    formData.append("volume", musicVolume.value);
+
+    musicBtn.disabled = true;
+    musicStatus.textContent = "⏳ Adding music to video...";
+
+    try {
+
+      const response = await fetch("/api/video/music", {
+        method: "POST",
+        body: formData
+      });
+
+      const contentType =
+        response.headers.get("content-type") || "";
+
+      if (!contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(
+          "Server returned HTML instead of JSON. HTTP " +
+          response.status
+        );
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(
+          data.message || "Music processing failed"
+        );
+      }
+
+      setCurrentVideo(data.videoUrl);
+      if (musicDownload) musicDownload.href = data.videoUrl;
+
+      musicStatus.textContent =
+        "✅ Music added successfully!";
+
+    } catch (error) {
+
+      console.error(error);
+
+      musicStatus.textContent =
+        "❌ " + error.message;
+    }
+
+    musicBtn.disabled = false;
+  });
+}
+
+
+// ======================
+// Aventra Add Text
+// ======================
+
+const textVideo = document.getElementById("textVideo");
+const overlayText = document.getElementById("overlayText");
+const textPosition = document.getElementById("textPosition");
+const textSize = document.getElementById("textSize");
+const textColor = document.getElementById("textColor");
+const textBtn = document.getElementById("textBtn");
+const textStatus = document.getElementById("textStatus");
+
+
+const textDownload = document.getElementById("textDownload");
+
+if (textBtn) {
+
+  textBtn.addEventListener("click", async () => {
+
+    let textInputVideo = null;
+
+    if (currentVideoUrl) {
+      textInputVideo = await videoUrlToFile(
+        currentVideoUrl,
+        "current-video.mp4"
+      );
+    } else {
+      alert("Please upload a video first.");
+      return;
+    }
+
+    const text = overlayText.value.trim();
+
+    if (!text) {
+      alert("Please enter text.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("video", textInputVideo);
+    formData.append("text", text);
+    formData.append("position", textPosition.value);
+    formData.append("size", textSize.value);
+    formData.append("color", textColor.value);
+
+    textBtn.disabled = true;
+    textStatus.textContent = "⏳ Adding text to video...";
+
+    try {
+
+      const response = await fetch("/api/video/text", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || "Text processing failed");
+      }
+
+      setCurrentVideo(data.videoUrl);
+      if (textDownload) textDownload.href = data.videoUrl;
+
+      textStatus.textContent = "✅ Text added successfully!";
+
+    } catch (error) {
+
+      console.error(error);
+      textStatus.textContent = "❌ " + error.message;
+
+    }
+
+    textBtn.disabled = false;
+
+  });
+
+}
+
+
+
+// ======================
+// Aventra Advanced Effects
+// ======================
+
+const effectsVideo = document.getElementById("effectsVideo");
+const effectsBtn = document.getElementById("effectsBtn");
+const effectsStatus = document.getElementById("effectsStatus");
+
+
+const effectsDownload = document.getElementById("effectsDownload");
+
+const effectsOriginalVideo =
+  document.getElementById("effectsOriginalVideo");
+
+const comparePlayBtn =
+  document.getElementById("comparePlayBtn");
+
+const comparePauseBtn =
+  document.getElementById("comparePauseBtn");
+
+const compareResetBtn =
+  document.getElementById("compareResetBtn");
+
+let selectedEffectPreset = "none";
+
+const effectControls = {
+  brightness: document.getElementById("effectBrightness"),
+  contrast: document.getElementById("effectContrast"),
+  saturation: document.getElementById("effectSaturation"),
+  blur: document.getElementById("effectBlur"),
+  sharpen: document.getElementById("effectSharpen"),
+  vignette: document.getElementById("effectVignette"),
+  grain: document.getElementById("effectGrain"),
+  rgbSplit: document.getElementById("effectRgbSplit"),
+  glow: document.getElementById("effectGlow"),
+  pixelate: document.getElementById("effectPixelate"),
+  scanlines: document.getElementById("effectScanlines"),
+  temperature: document.getElementById("effectTemperature"),
+  hue: document.getElementById("effectHue"),
+  highlights: document.getElementById("effectHighlights"),
+  shadows: document.getElementById("effectShadows"),
+  bars: document.getElementById("effectBars")
+};
+
+const effectValues = {
+  brightness: document.getElementById("brightnessValue"),
+  contrast: document.getElementById("contrastValue"),
+  saturation: document.getElementById("saturationValue"),
+  blur: document.getElementById("blurValue"),
+  sharpen: document.getElementById("sharpenValue"),
+  vignette: document.getElementById("vignetteValue"),
+  grain: document.getElementById("grainValue"),
+  rgbSplit: document.getElementById("rgbSplitValue"),
+  glow: document.getElementById("glowValue"),
+  pixelate: document.getElementById("pixelateValue"),
+  scanlines: document.getElementById("scanlinesValue"),
+  temperature: document.getElementById("temperatureValue"),
+  hue: document.getElementById("hueValue"),
+  highlights: document.getElementById("highlightsValue"),
+  shadows: document.getElementById("shadowsValue"),
+  bars: document.getElementById("barsValue")
+};
+
+// Professional preset profiles
+const effectPresets = {
+
+  none: {
+    brightness: 0,
+    contrast: 1,
+    saturation: 1,
+    blur: 0,
+    sharpen: 0,
+    vignette: 0,
+    grain: 0
+  },
+
+  cinematic: {
+    brightness: 0.02,
+    contrast: 1.25,
+    saturation: 1.15,
+    blur: 0,
+    sharpen: 0.8,
+    vignette: 0.35,
+    grain: 0.12
+  },
+
+  vintage: {
+    brightness: 0.03,
+    contrast: 1.05,
+    saturation: 0.75,
+    blur: 0.3,
+    sharpen: 0,
+    vignette: 0.45,
+    grain: 0.35
+  },
+
+  noir: {
+    brightness: -0.03,
+    contrast: 1.4,
+    saturation: 0,
+    blur: 0,
+    sharpen: 0.5,
+    vignette: 0.4,
+    grain: 0.12
+  },
+
+  warm: {
+    brightness: 0.04,
+    contrast: 1.08,
+    saturation: 1.15,
+    blur: 0,
+    sharpen: 0.2,
+    vignette: 0.12,
+    grain: 0
+  },
+
+  cool: {
+    brightness: 0,
+    contrast: 1.08,
+    saturation: 1.05,
+    blur: 0,
+    sharpen: 0.2,
+    vignette: 0.12,
+    grain: 0
+  },
+
+  vibrant: {
+    brightness: 0.02,
+    contrast: 1.2,
+    saturation: 1.55,
+    blur: 0,
+    sharpen: 0.7,
+    vignette: 0.08,
+    grain: 0
+  },
+
+  night: {
+    brightness: -0.12,
+    contrast: 1.3,
+    saturation: 0.8,
+    blur: 0,
+    sharpen: 0.3,
+    vignette: 0.5,
+    grain: 0.08
+  },
+
+  dream: {
+    brightness: 0.08,
+    contrast: 0.9,
+    saturation: 1.1,
+    blur: 1.2,
+    sharpen: 0,
+    vignette: 0.15,
+    grain: 0
+  },
+
+  film: {
+    brightness: 0,
+    contrast: 1.12,
+    saturation: 0.9,
+    blur: 0,
+    sharpen: 0.4,
+    vignette: 0.3,
+    grain: 0.28
+  },
+
+  retro: {
+    brightness: 0.03,
+    contrast: 1.08,
+    saturation: 0.85,
+    blur: 0.2,
+    sharpen: 0.2,
+    vignette: 0.4,
+    grain: 0.4
+  },
+
+  bwpro: {
+    brightness: -0.02,
+    contrast: 1.5,
+    saturation: 0,
+    blur: 0,
+    sharpen: 0.8,
+    vignette: 0.45,
+    grain: 0.18
+  },
+
+  glitch: {
+    brightness: 0,
+    contrast: 1.35,
+    saturation: 1.35,
+    blur: 0,
+    sharpen: 1.2,
+    vignette: 0.2,
+    grain: 0.3
+  },
+
+  sunset: {
+    brightness: 0.06,
+    contrast: 1.12,
+    saturation: 1.3,
+    blur: 0,
+    sharpen: 0.5,
+    vignette: 0.2,
+    grain: 0.05
+  },
+
+  arctic: {
+    brightness: 0.03,
+    contrast: 1.18,
+    saturation: 1.08,
+    blur: 0,
+    sharpen: 0.6,
+    vignette: 0.18,
+    grain: 0.03
+  },
+
+  cinematicpro: {
+    brightness: 0.01,
+    contrast: 1.35,
+    saturation: 1.08,
+    blur: 0,
+    sharpen: 1,
+    vignette: 0.5,
+    grain: 0.16
+  }
+};
+
+function updateEffectValues() {
+  Object.keys(effectControls).forEach(key => {
+    if (!effectControls[key] || !effectValues[key]) return;
+
+    const value = Number(effectControls[key].value);
+
+    effectValues[key].textContent =
+      key === "brightness"
+        ? value.toFixed(2)
+        : value.toFixed(2);
+  });
+}
+
+function applyEffectPreset(name) {
+
+  const preset = effectPresets[name];
+
+  if (!preset) return;
+
+  selectedEffectPreset = name;
+
+  Object.keys(preset).forEach(key => {
+
+    if (effectControls[key]) {
+      effectControls[key].value = preset[key];
+    }
+
+  });
+
+  updateEffectValues();
+
+  document.querySelectorAll(".preset-btn")
+    .forEach(btn => btn.classList.remove("active"));
+
+  const activeButton =
+    document.querySelector(
+      `.preset-btn[data-preset="${name}"]`
+    );
+
+  if (activeButton) {
+    activeButton.classList.add("active");
+  }
+}
+
+// Manual slider updates
+Object.keys(effectControls).forEach(key => {
+
+  if (!effectControls[key]) return;
+
+  effectControls[key].addEventListener("input", () => {
+    updateEffectValues();
+  });
+
+});
+
+// Preset buttons
+document.querySelectorAll(".preset-btn").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    applyEffectPreset(
+      button.dataset.preset
+    );
+
+  });
+
+});
+
+// Default preset
+applyEffectPreset("none");
+
+if (effectsBtn) {
+
+  effectsBtn.addEventListener("click", async () => {
+
+    let effectsInputVideo = null;
+
+    if (currentVideoUrl) {
+      effectsInputVideo = await videoUrlToFile(
+        currentVideoUrl,
+        "current-video.mp4"
+      );
+    } else {
+      alert("Please upload a video first.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append(
+      "video",
+      effectsInputVideo
+    );
+
+    formData.append(
+      "preset",
+      selectedEffectPreset
+    );
+
+    formData.append(
+      "brightness",
+      effectControls.brightness.value
+    );
+
+    formData.append(
+      "contrast",
+      effectControls.contrast.value
+    );
+
+    formData.append(
+      "saturation",
+      effectControls.saturation.value
+    );
+
+    formData.append(
+      "blur",
+      effectControls.blur.value
+    );
+
+    formData.append(
+      "sharpen",
+      effectControls.sharpen.value
+    );
+
+    formData.append(
+      "vignette",
+      effectControls.vignette.value
+    );
+
+    formData.append(
+      "grain",
+      effectControls.grain.value
+    );
+
+    formData.append(
+      "rgbSplit",
+      effectControls.rgbSplit.value
+    );
+
+    formData.append(
+      "glow",
+      effectControls.glow.value
+    );
+
+    formData.append(
+      "pixelate",
+      effectControls.pixelate.value
+    );
+
+    formData.append(
+      "scanlines",
+      effectControls.scanlines.value
+    );
+
+    formData.append(
+      "temperature",
+      effectControls.temperature.value
+    );
+
+    formData.append(
+      "hue",
+      effectControls.hue.value
+    );
+
+    formData.append(
+      "highlights",
+      effectControls.highlights.value
+    );
+
+    formData.append(
+      "shadows",
+      effectControls.shadows.value
+    );
+
+    formData.append(
+      "bars",
+      effectControls.bars.value
+    );
+
+    effectsBtn.disabled = true;
+
+    effectsStatus.textContent =
+      "⏳ Applying professional effects...";
+
+    try {
+
+      const response = await fetch(
+        "/api/video/effects",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const contentType =
+        response.headers.get("content-type") || "";
+
+      if (!contentType.includes("application/json")) {
+        throw new Error(
+          "Server returned an invalid response."
+        );
+      }
+
+      const data =
+        await response.json();
+
+      if (!data.success) {
+        throw new Error(
+          data.message ||
+          "Effects processing failed"
+        );
+      }
+
+      setCurrentVideo(data.videoUrl);
+
+        data.videoUrl;
+
+
+
+      if (effectsDownload) effectsDownload.href = data.videoUrl;
+
+        "block";
+
+      effectsStatus.textContent =
+        "✅ Effects applied successfully!";
+
+    } catch (error) {
+
+      console.error(error);
+
+      effectsStatus.textContent =
+        "❌ " + error.message;
+
+    }
+
+    effectsBtn.disabled = false;
+
+  });
+
+}
+
+// ======================
+
+
+// ======================
+// FEATURE TAB SWITCHING
+// ======================
+
+window.activateFeatureTab = function(targetId) {
+
+  console.log("🎬 ACTIVATING TAB:", targetId);
+
+  // Hide all feature sections
+  document.querySelectorAll(".feature-card").forEach(function(card) {
+    card.classList.remove("active");
+    card.style.display = "none";
+  });
+
+  // Remove active state from all tab buttons
+  document.querySelectorAll(".tab-btn").forEach(function(button) {
+    button.classList.remove("active");
+  });
+
+  // Find requested section
+  const target = document.getElementById(targetId);
+
+  if (!target) {
+    console.error("❌ TARGET NOT FOUND:", targetId);
+    return;
+  }
+
+  // Show requested section
+  target.classList.add("active");
+  target.style.display = "block";
+
+  // Activate matching button
+  const activeButton = document.querySelector(
+    '.tab-btn[data-tab="' + targetId + '"]'
+  );
+
+  if (activeButton) {
+    activeButton.classList.add("active");
+  }
+
+  console.log("✅ SHOWING:", targetId);
+};
+
+
+// Attach click events to feature tabs
+document.querySelectorAll(".tab-btn").forEach(function(button) {
+
+  button.addEventListener("click", function(event) {
+
+    event.preventDefault();
+
+    const targetId = button.getAttribute("data-tab");
+
+    console.log("🖱️ TAB CLICK:", targetId);
+
+    activateFeatureTab(targetId);
+  });
+
+});
+
+
+// Default tab
+activateFeatureTab("trimSection");
+
+// ======================
+// ======================
+
+// ======================
+// Sticker Category Filter
+// ======================
+
+document.querySelectorAll(".sticker-category").forEach(categoryBtn => {
+
+  categoryBtn.addEventListener("click", () => {
+
+    document
+      .querySelectorAll(".sticker-category")
+      .forEach(btn => btn.classList.remove("active"));
+
+    categoryBtn.classList.add("active");
+
+    const text = categoryBtn.textContent.toLowerCase();
+
+    let category = "social";
+
+    if (text.includes("reaction")) {
+      category = "reactions";
+    } else if (text.includes("fun")) {
+      category = "fun";
+    } else if (text.includes("arrow")) {
+      category = "arrows";
+    }
+
+    document
+      .querySelectorAll(".builtin-sticker")
+      .forEach(sticker => {
+
+        sticker.style.display =
+          sticker.dataset.category === category
+            ? "flex"
+            : "none";
+
+      });
+
+  });
+
+});
+
+
+// Built-in Sticker Library
+// ======================
+
+const builtinStickers = {
+  like: "👍",
+  love: "❤️",
+  subscribe: "🔔",
+  follow: "👆",
+  comment: "💬",
+  fire: "🔥",
+  star: "⭐",
+  party: "🎉",
+  hundred: "💯",
+  arrow: "➡️",
+  check: "✅",
+  wow: "😮"
+};
+
+let selectedBuiltinSticker = null;
+
+function createBuiltinStickerFile(emoji, name) {
+  return new Promise((resolve, reject) => {
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 600;
+    canvas.height = 600;
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = "420px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+      emoji,
+      canvas.width / 2,
+      canvas.height / 2
+    );
+
+    canvas.toBlob(blob => {
+
+      if (!blob) {
+        reject(new Error("Could not create sticker image."));
+        return;
+      }
+
+      resolve(
+        new File(
+          [blob],
+          name + ".png",
+          { type: "image/png" }
+        )
+      );
+
+    }, "image/png");
+  });
+}
+
+document.querySelectorAll(".builtin-sticker").forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    document
+      .querySelectorAll(".builtin-sticker")
+      .forEach(btn => btn.classList.remove("selected"));
+
+    button.classList.add("selected");
+
+    selectedBuiltinSticker =
+      button.dataset.sticker;
+
+    const label =
+      document.getElementById("selectedBuiltinSticker");
+
+    if (label) {
+      label.textContent =
+        "✅ Selected: " +
+        button.querySelector("span").textContent;
+    }
+
+    // Clear uploaded sticker
+    if (stickerFile) {
+      stickerFile.value = "";
+    }
+
+    console.log(
+      "🎟️ Built-in sticker selected:",
+      selectedBuiltinSticker
+    );
+  });
+
+});
+
+// Aventra Sticker Feature
+// ======================
+
+const stickerFile = document.getElementById("stickerFile");
+const stickerPosition = document.getElementById("stickerPosition");
+const stickerSize = document.getElementById("stickerSize");
+const stickerSizeValue = document.getElementById("stickerSizeValue");
+const stickerOpacity = document.getElementById("stickerOpacity");
+const stickerOpacityValue = document.getElementById("stickerOpacityValue");
+const stickerBtn = document.getElementById("stickerBtn");
+const stickerStatus = document.getElementById("stickerStatus");
+
+if (
+  stickerFile &&
+  stickerPosition &&
+  stickerSize &&
+  stickerSizeValue &&
+  stickerOpacity &&
+  stickerOpacityValue &&
+  stickerBtn
+) {
+
+  stickerSize.addEventListener("input", () => {
+    stickerSizeValue.textContent =
+      Number(stickerSize.value) + " px";
+  });
+
+  stickerOpacity.addEventListener("input", () => {
+    stickerOpacityValue.textContent =
+      Math.round(Number(stickerOpacity.value) * 100) + "%";
+  });
+
+  stickerBtn.addEventListener("click", async () => {
+
+    if (!currentVideoUrl) {
+      alert("Please select or create a video first.");
+      return;
+    }
+
+    // Get selected sticker: built-in or uploaded
+    let stickerInputFile = null;
+
+    if (selectedBuiltinSticker) {
+      const emoji = builtinStickers[selectedBuiltinSticker];
+
+      if (!emoji) {
+        alert("Built-in sticker could not be found.");
+        return;
+      }
+
+      stickerInputFile = await createBuiltinStickerFile(
+        emoji,
+        selectedBuiltinSticker
+      );
+
+    } else if (stickerFile.files[0]) {
+      stickerInputFile = stickerFile.files[0];
+
+    } else {
+      alert("Please select a sticker first.");
+      return;
+    }
+
+    stickerBtn.disabled = true;
+
+    stickerStatus.textContent =
+      "⏳ Adding sticker to video...";
+
+    try {
+
+      const videoFile = await videoUrlToFile(
+        currentVideoUrl,
+        "current-video.mp4"
+      );
+
+      const formData = new FormData();
+
+      formData.append(
+        "video",
+        videoFile
+      );
+
+      formData.append(
+        "sticker",
+        stickerInputFile
+      );
+
+      formData.append(
+        "position",
+        stickerPosition.value
+      );
+
+      formData.append(
+        "size",
+        stickerSize.value
+      );
+
+      formData.append(
+        "opacity",
+        stickerOpacity.value
+      );
+
+      const response = await fetch(
+        "/api/video/sticker",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const contentType =
+        response.headers.get("content-type") || "";
+
+      if (!contentType.includes("application/json")) {
+
+        const text = await response.text();
+
+        throw new Error(
+          "Server returned HTML instead of JSON. HTTP " +
+          response.status
+        );
+      }
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Sticker processing failed"
+        );
+      }
+
+      // Update current video
+      setCurrentVideo(data.url);
+
+      // Make processed video the next input
+      currentVideoFile = await videoUrlToFile(
+        data.url,
+        "sticker-video.mp4"
+      );
+
+      downloadLink.href = data.url;
+
+      stickerStatus.textContent =
+        "✅ Sticker added successfully!";
+
+      console.log(
+        "🎟️ STICKER OUTPUT:",
+        data.url
+      );
+
+    } catch (error) {
+
+      console.error(
+        "❌ Sticker error:",
+        error
+      );
+
+      stickerStatus.textContent =
+        "❌ " + error.message;
+
+    } finally {
+
+      stickerBtn.disabled = false;
+
+    }
+
+  });
+
+}
+
+// ======================
+// VIDEO ANIMATION
+// ======================
+
+const animationBtn = document.getElementById("animationBtn");
+const animationType = document.getElementById("animationType");
+const animationDuration = document.getElementById("animationDuration");
+const animationStatus = document.getElementById("animationStatus");
+const animationDownload = document.getElementById("animationDownload");
+
+if (animationBtn) {
+
+  animationBtn.addEventListener("click", async function () {
+
+    console.log("🎬 APPLY ANIMATION CLICKED");
+
+    if (!currentVideoUrl) {
+      if (animationStatus) {
+        animationStatus.textContent =
+          "❌ Please select or create a video first.";
+      }
+      return;
+    }
+
+    const type = animationType ? animationType.value : "none";
+    const duration = animationDuration
+      ? animationDuration.value
+      : "1";
+
+    if (animationStatus) {
+      animationStatus.textContent =
+        "⏳ Applying animation...";
+    }
+
+    animationBtn.disabled = true;
+
+    try {
+
+      const videoFile = await videoUrlToFile(
+        currentVideoUrl,
+        "current-video.mp4"
+      );
+
+      const formData = new FormData();
+
+      formData.append("video", videoFile);
+      formData.append("animation", type);
+      formData.append("duration", duration);
+
+      const response = await fetch(
+        "/api/video/animation",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Animation failed"
+        );
+      }
+
+      setCurrentVideo(data.videoUrl);
+
+      if (animationDownload) {
+        animationDownload.href = data.videoUrl;
+        animationDownload.style.display = "block";
+      }
+
+      if (animationStatus) {
+        animationStatus.textContent =
+          "✅ Animation applied successfully!";
+      }
+
+      console.log(
+        "✅ ANIMATION RESULT:",
+        data.videoUrl
+      );
+
+    } catch (error) {
+
+      console.error(
+        "❌ ANIMATION ERROR:",
+        error
+      );
+
+      if (animationStatus) {
+        animationStatus.textContent =
+          "❌ " + error.message;
+      }
+
+    } finally {
+
+      animationBtn.disabled = false;
+
+    }
+
+  });
+
+}
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+(function () {
+
+  const btn = document.getElementById("generateYoutubeScriptBtn");
+  const topic = document.getElementById("youtubeTopic");
+  const category = document.getElementById("youtubeCategory");
+  const language = document.getElementById("youtubeLanguage");
+  const duration = document.getElementById("youtubeDuration");
+  const style = document.getElementById("youtubeStyle");
+  const status = document.getElementById("youtubeScriptStatus");
+  const output = document.getElementById("youtubeScriptOutput");
+
+  if (!btn) return;
+
+  btn.addEventListener("click", async function () {
+
+    const topicValue = topic.value.trim();
+
+    if (!topicValue) {
+      status.textContent = "⚠️ پہلے Topic لکھیں۔";
+      topic.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Generating Script...";
+    status.textContent = "AI script تیار کر رہا ہے...";
+    output.value = "";
+
+    try {
+
+      const response = await fetch("/api/youtube/script", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          topic: topicValue,
+          category: category ? category.value : "",
+          language: language.value,
+          duration: duration.value,
+          style: style.value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Script generation failed");
+      }
+
+      output.value = data.script;
+      status.textContent = "✅ YouTube Script تیار ہے!";
+
+    } catch (error) {
+
+      console.error(error);
+      status.textContent = "❌ " + error.message;
+
+    } finally {
+
+      btn.disabled = false;
+      btn.textContent = "🚀 Generate YouTube Script";
+
+    }
+
+  });
+
+
+  const voiceBtn = document.getElementById("generateYoutubeVoiceBtn");
+  const voiceStatus = document.getElementById("youtubeVoiceStatus");
+  const voicePlayer = document.getElementById("youtubeVoicePlayer");
+
+  if (voiceBtn) {
+    voiceBtn.addEventListener("click", async function () {
+
+      const scriptText = output.value.trim();
+
+      if (!scriptText) {
+        voiceStatus.textContent = "⚠️ پہلے Script generate کریں۔";
+        return;
+      }
+
+      voiceBtn.disabled = true;
+      voiceBtn.textContent = "⏳ Generating Voice...";
+      voiceStatus.textContent = "اردو AI voice تیار ہو رہی ہے...";
+      voicePlayer.style.display = "none";
+
+      try {
+
+        const response = await fetch("/api/youtube/voice", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            text: scriptText,
+            voice: "ur-PK-UzmaNeural"
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Voice generation failed");
+        }
+
+        voicePlayer.src = data.audioUrl;
+        voicePlayer.style.display = "block";
+        voicePlayer.load();
+
+        voiceStatus.textContent = "✅ Urdu Voice تیار ہے!";
+
+      } catch (error) {
+
+        console.error(error);
+        voiceStatus.textContent = "❌ " + error.message;
+
+      } finally {
+
+        voiceBtn.disabled = false;
+        voiceBtn.textContent = "🎙️ Generate Urdu Voice";
+
+      }
+
+    });
+  }
+
+})();
+
+// ============================
+// YouTube Automation Workflow
+// Scenes → Images → Final Video
+// ============================
+(function () {
+
+  const scriptOutput =
+    document.getElementById("youtubeScriptOutput");
+
+  const scenesBtn =
+    document.getElementById("generateYoutubeScenesBtn");
+
+  const scenesStatus =
+    document.getElementById("youtubeScenesStatus");
+
+  const scenesOutput =
+    document.getElementById("youtubeScenesOutput");
+
+  const imagesBtn =
+    document.getElementById("generateYoutubeImagesBtn");
+
+  const imagesStatus =
+    document.getElementById("youtubeImagesStatus");
+
+  const imagesPreview =
+    document.getElementById("youtubeImagesPreview");
+
+  const videoBtn =
+    document.getElementById("createYoutubeVideoBtn");
+
+  const videoStatus =
+    document.getElementById("youtubeVideoStatus");
+
+  const finalVideo =
+    document.getElementById("youtubeFinalVideo");
+
+  const finalVideoLink =
+    document.getElementById("youtubeFinalVideoLink");
+
+  let youtubeScenes = [];
+
+  // ----------------------------
+  // Generate Scenes
+  // ----------------------------
+  if (scenesBtn) {
+    scenesBtn.addEventListener("click", async function () {
+
+      const script = scriptOutput.value.trim();
+
+      if (!script) {
+        scenesStatus.textContent =
+          "⚠️ پہلے YouTube Script generate کریں۔";
+        return;
+      }
+
+      scenesBtn.disabled = true;
+      scenesBtn.textContent =
+        "⏳ Generating Scenes...";
+      scenesStatus.textContent =
+        "AI script کو visual scenes میں تبدیل کر رہا ہے...";
+
+      try {
+
+        const response = await fetch(
+          "/api/youtube/scenes",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              script: script,
+              sceneCount: Math.min(
+  15,
+  Math.max(
+    8,
+    Math.ceil(
+      (Number(duration ? duration.value : 3) * 60) / 8
+    )
+  )
+)
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message ||
+            "Scene generation failed"
+          );
+        }
+
+        youtubeScenes = data.scenes || [];
+
+        scenesOutput.value =
+          JSON.stringify(
+            youtubeScenes,
+            null,
+            2
+          );
+
+        scenesStatus.textContent =
+          `✅ ${youtubeScenes.length} scenes تیار ہیں۔`;
+
+      } catch (error) {
+
+        console.error(error);
+
+        scenesStatus.textContent =
+          "❌ " + error.message;
+
+      } finally {
+
+        scenesBtn.disabled = false;
+        scenesBtn.textContent =
+          "🎞️ Generate Scenes";
+      }
+    });
+  }
+
+
+  // ----------------------------
+  // Generate Images
+  // ----------------------------
+  if (imagesBtn) {
+
+    imagesBtn.addEventListener(
+      "click",
+      async function () {
+
+        if (!youtubeScenes.length) {
+
+          try {
+            youtubeScenes =
+              JSON.parse(
+                scenesOutput.value
+              );
+          } catch {
+            youtubeScenes = [];
+          }
+        }
+
+        if (!youtubeScenes.length) {
+          imagesStatus.textContent =
+            "⚠️ پہلے Scenes generate کریں۔";
+          return;
+        }
+
+        imagesBtn.disabled = true;
+        imagesBtn.textContent =
+          "⏳ Generating Images...";
+        imagesStatus.textContent =
+          "AI scene images تیار ہو رہی ہیں...";
+        imagesPreview.innerHTML = "";
+
+        try {
+
+          const response = await fetch(
+            "/api/youtube/generate-images",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                scenes: youtubeScenes
+              })
+            }
+          );
+
+          const data =
+            await response.json();
+
+          if (
+            !response.ok ||
+            !data.success
+          ) {
+            throw new Error(
+              data.message ||
+              "Image generation failed"
+            );
+          }
+
+          const images =
+            data.images || [];
+
+          images.forEach(function (item) {
+
+            const wrapper =
+              document.createElement("div");
+
+            wrapper.style.marginTop =
+              "15px";
+
+            const title =
+              document.createElement("p");
+
+            title.textContent =
+              `Scene ${item.scene}: ${item.summary || ""}`;
+
+            const img =
+              document.createElement("img");
+
+            img.src = item.imageUrl;
+            img.alt =
+              `Scene ${item.scene}`;
+
+            img.style.width = "100%";
+            img.style.borderRadius =
+              "10px";
+            img.style.display = "block";
+
+            wrapper.appendChild(title);
+            wrapper.appendChild(img);
+
+            imagesPreview.appendChild(
+              wrapper
+            );
+          });
+
+          imagesStatus.textContent =
+            `✅ ${images.length} scene images تیار ہیں۔`;
+
+        } catch (error) {
+
+          console.error(error);
+
+          imagesStatus.textContent =
+            "❌ " + error.message;
+
+        } finally {
+
+          imagesBtn.disabled = false;
+          imagesBtn.textContent =
+            "🖼️ Generate Scene Images";
+        }
+      }
+    );
+  }
+
+
+  // ----------------------------
+  // Create Final Video
+  // ----------------------------
+  if (videoBtn) {
+
+    videoBtn.addEventListener(
+      "click",
+      async function () {
+
+        if (!youtubeScenes.length) {
+
+          try {
+            youtubeScenes =
+              JSON.parse(
+                scenesOutput.value
+              );
+          } catch {
+            youtubeScenes = [];
+          }
+        }
+
+        if (!youtubeScenes.length) {
+          videoStatus.textContent =
+            "⚠️ پہلے Scenes generate کریں۔";
+          return;
+        }
+
+        videoBtn.disabled = true;
+        videoBtn.textContent =
+          "⏳ Creating Final Video...";
+        videoStatus.textContent =
+          "🎬 Video اور Urdu AI voice تیار ہو رہی ہے...";
+
+        finalVideo.style.display =
+          "none";
+
+        finalVideoLink.style.display =
+          "none";
+
+        try {
+
+          const scriptText =
+            scriptOutput.value.trim();
+
+          const response = await fetch(
+            "/api/youtube/create-video",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                scenes: youtubeScenes,
+                voiceText: scriptText,
+                voice: "ur-PK-UzmaNeural"
+              })
+            }
+          );
+
+          const data =
+            await response.json();
+
+          if (
+            !response.ok ||
+            !data.success
+          ) {
+            throw new Error(
+              data.message ||
+              "Video creation failed"
+            );
+          }
+
+          const videoUrl =
+            data.videoUrl;
+
+          finalVideo.src =
+            videoUrl;
+
+          finalVideo.style.display =
+            "block";
+
+          finalVideo.load();
+
+          finalVideoLink.href =
+            videoUrl;
+
+          finalVideoLink.style.display =
+            "block";
+
+          videoStatus.textContent =
+            "✅ Final YouTube Video تیار ہے!";
+
+        } catch (error) {
+
+          console.error(error);
+
+          videoStatus.textContent =
+            "❌ " + error.message;
+
+        } finally {
+
+          videoBtn.disabled = false;
+          videoBtn.textContent =
+            "🎬 Create Final YouTube Video";
+        }
+      }
+    );
+  }
+
+})();
+
+
+// ============================
+// One-Click Complete YouTube
+// Script → Scenes → Images → Video + Voice
+// ============================
+(function () {
+
+  const btn =
+    document.getElementById("oneClickYoutubeBtn");
+
+  const status =
+    document.getElementById("oneClickYoutubeStatus");
+
+  const topic =
+    document.getElementById("youtubeTopic");
+
+  const category =
+    document.getElementById("youtubeCategory");
+
+  const language =
+    document.getElementById("youtubeLanguage");
+
+  const duration =
+    document.getElementById("youtubeDuration");
+
+  const style =
+    document.getElementById("youtubeStyle");
+
+  const scriptOutput =
+    document.getElementById("youtubeScriptOutput");
+
+  const scenesOutput =
+    document.getElementById("youtubeScenesOutput");
+
+  const finalVideo =
+    document.getElementById("youtubeFinalVideo");
+
+  const finalVideoLink =
+    document.getElementById("youtubeFinalVideoLink");
+
+  if (!btn) return;
+
+  btn.addEventListener("click", async function () {
+
+    const topicValue =
+      topic.value.trim();
+
+    if (!topicValue) {
+      status.textContent =
+        "⚠️ پہلے Topic لکھیں۔";
+      topic.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent =
+      "⏳ Creating Complete Video...";
+
+    try {
+
+      // ----------------------------
+      // 1. Generate Script
+      // ----------------------------
+      status.textContent =
+        "📝 Step 1/4: AI Script تیار ہو رہا ہے...";
+
+      const scriptResponse =
+        await fetch("/api/youtube/script", {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            topic: topicValue,
+            category:
+              category ? category.value : "",
+            language:
+              language ? language.value : "Urdu",
+            duration:
+              duration ? duration.value : "3",
+            style:
+              style ? style.value : "Documentary"
+          })
+        });
+
+      const scriptData =
+        await scriptResponse.json();
+
+      if (
+        !scriptResponse.ok ||
+        !scriptData.success
+      ) {
+        throw new Error(
+          scriptData.message ||
+          "Script generation failed"
+        );
+      }
+
+      const scriptText =
+        scriptData.script || "";
+
+      scriptOutput.value =
+        scriptText;
+
+
+      // ----------------------------
+      // 2. Generate Scenes
+      // ----------------------------
+      status.textContent =
+        "🎞️ Step 2/4: Visual scenes تیار ہو رہے ہیں...";
+
+      const scenesResponse =
+        await fetch("/api/youtube/scenes", {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            script: scriptText,
+            sceneCount: Math.min(
+              50,
+              Math.max(
+                8,
+                Math.ceil(
+                  (Number(duration ? duration.value : 3) * 60) / 8
+                )
+              )
+            )
+          })
+        });
+
+      const scenesData =
+        await scenesResponse.json();
+
+      if (
+        !scenesResponse.ok ||
+        !scenesData.success
+      ) {
+        throw new Error(
+          scenesData.message ||
+          "Scene generation failed"
+        );
+      }
+
+      let scenes =
+        scenesData.scenes || [];
+
+      // Make the total video duration match
+      // the selected duration.
+      const targetSeconds =
+        Number(duration ? duration.value : 3) * 60;
+
+      if (scenes.length > 0) {
+        const sceneDuration =
+          targetSeconds / scenes.length;
+
+        scenes = scenes.map((scene, index) => ({
+          ...scene,
+          scene:
+            Number(scene.scene) || (index + 1),
+          duration:
+            Number(sceneDuration.toFixed(2))
+        }));
+      }
+
+      scenesOutput.value =
+        JSON.stringify(
+          scenes,
+          null,
+          2
+        );
+
+
+      // ----------------------------
+      // 3. Generate Images
+      // ----------------------------
+      status.textContent =
+        "🖼️ Step 3/4: Scene images تیار ہو رہی ہیں...";
+
+      const imagesResponse =
+        await fetch(
+          "/api/youtube/generate-images",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              scenes: scenes
+            })
+          }
+        );
+
+      const imagesData =
+        await imagesResponse.json();
+
+      if (
+        !imagesResponse.ok ||
+        !imagesData.success
+      ) {
+        throw new Error(
+          imagesData.message ||
+          "Image generation failed"
+        );
+      }
+
+
+      // ----------------------------
+      // 4. Create Video + Voice
+      // ----------------------------
+      status.textContent =
+        "🎬 Step 4/4: Final video اور Urdu AI voice بن رہی ہے...";
+
+      const videoResponse =
+        await fetch(
+          "/api/youtube/create-video",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              scenes: scenes,
+              voiceText: scriptText,
+              voice: "ur-PK-UzmaNeural"
+            })
+          }
+        );
+
+      const videoData =
+        await videoResponse.json();
+
+      if (
+        !videoResponse.ok ||
+        !videoData.success
+      ) {
+        throw new Error(
+          videoData.message ||
+          "Video creation failed"
+        );
+      }
+
+      const videoUrl =
+        videoData.videoUrl;
+
+      finalVideo.src =
+        videoUrl;
+
+      finalVideo.style.display =
+        "block";
+
+      finalVideo.load();
+
+      finalVideoLink.href =
+        videoUrl;
+
+      finalVideoLink.style.display =
+        "block";
+
+      status.textContent =
+        "✅ مکمل YouTube Video تیار ہے! 🎉";
+
+    } catch (error) {
+
+      console.error(
+        "One-click YouTube error:",
+        error
+      );
+
+      status.textContent =
+        "❌ " + error.message;
+
+    } finally {
+
+      btn.disabled = false;
+
+      btn.textContent =
+        "🚀 Generate Complete YouTube Video";
+    }
+
+  });
+
+})();
+
+</script>
+
+
+<script>
+(function () {
+  const btn = document.getElementById("generateYoutubeThumbnailBtn");
+  const prompt = document.getElementById("youtubeThumbnailPrompt");
+  const status = document.getElementById("youtubeThumbnailStatus");
+  const preview = document.getElementById("youtubeThumbnailPreview");
+  const link = document.getElementById("youtubeThumbnailLink");
+
+  if (!btn) return;
+
+  btn.addEventListener("click", async function () {
+    const promptValue = prompt.value.trim();
+
+    if (!promptValue) {
+      status.textContent = "⚠️ پہلے Thumbnail topic لکھیں۔";
+      prompt.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Generating Thumbnail...";
+    status.textContent = "AI YouTube thumbnail تیار کر رہا ہے...";
+    preview.style.display = "none";
+    link.style.display = "none";
+
+    try {
+      const response = await fetch("/api/youtube/thumbnail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: promptValue
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Thumbnail generation failed"
+        );
+      }
+
+      const thumbnailUrl =
+        new URL(data.imageUrl, window.location.origin).href;
+
+      preview.src = thumbnailUrl;
+      preview.style.display = "block";
+
+      link.href = thumbnailUrl;
+      link.style.display = "block";
+
+      status.textContent = "✅ YouTube Thumbnail تیار ہے!";
+    } catch (error) {
+      console.error("Thumbnail error:", error);
+      status.textContent = "❌ " + error.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "🖼️ Generate YouTube Thumbnail";
+    }
+  });
+})();
+</script>
+
+
+<script>
+(() => {
+  const btn = document.getElementById("generateYoutubeSeoBtn");
+  const status = document.getElementById("youtubeSeoStatus");
+
+  const topic = document.getElementById("youtubeTopic");
+  const language = document.getElementById("youtubeLanguage");
+  const scriptOutput = document.getElementById("youtubeScriptOutput");
+
+  const title = document.getElementById("youtubeSeoTitle");
+  const description = document.getElementById("youtubeSeoDescription");
+  const keywords = document.getElementById("youtubeSeoKeywords");
+  const tags = document.getElementById("youtubeSeoTags");
+  const hashtags = document.getElementById("youtubeSeoHashtags");
+
+  const copyBtn = document.getElementById("copyYoutubeSeoBtn");
+  const copyStatus = document.getElementById("copyYoutubeSeoStatus");
+
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    const topicValue = topic ? topic.value.trim() : "";
+    const languageValue = language ? language.value : "English";
+    const scriptValue = scriptOutput ? scriptOutput.value.trim() : "";
+
+    if (!topicValue) {
+      status.textContent = "⚠️ پہلے YouTube Topic لکھیں۔";
+      if (topic) topic.focus();
+      return;
+    }
+
+    if (!scriptValue) {
+      status.textContent = "⚠️ پہلے YouTube Script generate کریں۔";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Generating SEO...";
+    status.textContent = "🔎 AI YouTube SEO تیار کر رہا ہے...";
+
+    try {
+      const response = await fetch("/api/youtube/seo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          topic: topicValue,
+          language: languageValue,
+          script: scriptValue
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "SEO generation failed"
+        );
+      }
+
+      const seo = data.seo || {};
+
+      title.value = seo.title || "";
+      description.value = seo.description || "";
+
+      keywords.value = Array.isArray(seo.keywords)
+        ? seo.keywords.join(", ")
+        : (seo.keywords || "");
+
+      tags.value = Array.isArray(seo.tags)
+        ? seo.tags.join(", ")
+        : (seo.tags || "");
+
+      hashtags.value = Array.isArray(seo.hashtags)
+        ? seo.hashtags.join(" ")
+        : (seo.hashtags || "");
+
+      status.textContent = "✅ YouTube SEO تیار ہے!";
+
+    } catch (error) {
+      console.error("YouTube SEO error:", error);
+      status.textContent = "❌ " + error.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "🚀 Generate YouTube SEO";
+    }
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener("click", async () => {
+      const allSeo = [
+        "🎯 SEO TITLE",
+        title.value,
+        "",
+        "📝 DESCRIPTION",
+        description.value,
+        "",
+        "🔑 KEYWORDS",
+        keywords.value,
+        "",
+        "🏷️ TAGS",
+        tags.value,
+        "",
+        "#️⃣ HASHTAGS",
+        hashtags.value
+      ].join("\n");
+
+      if (!title.value && !description.value) {
+        copyStatus.textContent = "⚠️ پہلے SEO generate کریں۔";
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(allSeo);
+        copyStatus.textContent = "✅ All SEO copied!";
+      } catch (error) {
+        copyStatus.textContent = "❌ Copy failed";
+      }
+    });
+  }
+})();
+</script>
+
+
+<script>
+// ============================
+// Aventra Authentication UI
+// ============================
+
+const authSection = document.getElementById("authSection");
+const authTitle = document.getElementById("authTitle");
+const signupNameBox = document.getElementById("signupNameBox");
+const authName = document.getElementById("authName");
+const authEmail = document.getElementById("authEmail");
+const authPassword = document.getElementById("authPassword");
+const authBtn = document.getElementById("authBtn");
+const authSwitchBtn = document.getElementById("authSwitchBtn");
+const authStatus = document.getElementById("authStatus");
+
+const userBar = document.getElementById("userBar");
+const loggedUserName = document.getElementById("loggedUserName");
+const loggedUserEmail = document.getElementById("loggedUserEmail");
+const loggedUserPlan = document.getElementById("loggedUserPlan");
+const logoutBtn = document.getElementById("logoutBtn");
+
+let authMode = "login";
+
+function setAuthMode(mode) {
+
+  authMode = mode;
+
+  if (mode === "signup") {
+
+    authTitle.textContent = "📝 Create Aventra Account";
+
+    signupNameBox.style.display = "block";
+
+    authBtn.textContent = "📝 Sign Up";
+
+    authSwitchBtn.textContent =
+      "Already have an account? Login";
+
+  } else {
+
+    authTitle.textContent = "🔐 Login to Aventra";
+
+    signupNameBox.style.display = "none";
+
+    authBtn.textContent = "🔐 Login";
+
+    authSwitchBtn.textContent =
+      "Create an account";
+  }
+
+  authStatus.textContent = "";
+}
+
+authSwitchBtn.addEventListener("click", () => {
+
+  setAuthMode(
+    authMode === "login"
+      ? "signup"
+      : "login"
+  );
+
+});
+
+authBtn.addEventListener("click", async () => {
+
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  if (!email || !password) {
+
+    authStatus.textContent =
+      "❌ Email and password are required.";
+
+    return;
+  }
+
+  if (authMode === "signup" && !authName.value.trim()) {
+
+    authStatus.textContent =
+      "❌ Please enter your name.";
+
+    return;
+  }
+
+  authBtn.disabled = true;
+
+  authStatus.textContent =
+    "⏳ Please wait...";
+
+  try {
+
+    const endpoint =
+      authMode === "signup"
+        ? "/api/auth/signup"
+        : "/api/auth/login";
+
+    const body =
+      authMode === "signup"
+        ? {
+            name: authName.value.trim(),
+            email,
+            password
+          }
+        : {
+            email,
+            password
+          };
+
+    const response = await fetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Authentication failed"
+      );
+    }
+
+    localStorage.setItem(
+      "aventra_token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "aventra_user",
+      JSON.stringify(data.user)
+    );
+
+    showLoggedInUser(data.user);
+
+    authStatus.textContent =
+      "✅ " + data.message;
+
+  } catch (error) {
+
+    authStatus.textContent =
+      "❌ " + error.message;
+
+  } finally {
+
+    authBtn.disabled = false;
+
+  }
+
+});
+
+function showLoggedInUser(user) {
+
+  authSection.style.display = "none";
+
+  unlockVideoStudioFeatures();
+
+  userBar.style.display = "block";
+
+  loggedUserName.textContent =
+    user.name || "";
+
+  loggedUserEmail.textContent =
+    user.email || "";
+
+  loggedUserPlan.textContent =
+    user.plan || "free";
+}
+
+function logoutUser() {
+
+  localStorage.removeItem("aventra_token");
+
+  localStorage.removeItem("aventra_user");
+
+  userBar.style.display = "none";
+
+  authSection.style.display = "block";
+
+  authEmail.value = "";
+  authPassword.value = "";
+  authName.value = "";
+
+  setAuthMode("login");
+  lockVideoStudioFeatures();
+}
+
+logoutBtn.addEventListener(
+  "click",
+  logoutUser
+);
+
+// Restore existing login
+const savedUser =
+  localStorage.getItem("aventra_user");
+
+const savedToken =
+  localStorage.getItem("aventra_token");
+
+if (savedUser && savedToken) {
+
+  try {
+
+    showLoggedInUser(
+      JSON.parse(savedUser)
+    );
+
+  } catch {
+
+    logoutUser();
+
+  }
+
+}
+
+</script>
+
+
+<script>
+// ============================
+// Aventra Feature Authentication Lock
+// ============================
+
+function lockVideoStudioFeatures() {
+
+  document.querySelectorAll(".feature-card, .feature-nav, #videoUploadCard").forEach(el => {
+
+    if (el.id === "authSection" || el.id === "userBar") {
+      return;
+    }
+
+    el.dataset.authHidden = "true";
+    el.style.setProperty("display", "none", "important");
+
+  });
+
+}
+
+function unlockVideoStudioFeatures() {
+
+  document.querySelectorAll('[data-auth-hidden="true"]').forEach(el => {
+
+    el.style.removeProperty("display");
+    delete el.dataset.authHidden;
+
+  });
+
+}
+
+// Lock after the complete page DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+
+  const token = localStorage.getItem("aventra_token");
+
+  if (!token) {
+    document.body.classList.add("auth-locked");
+    lockVideoStudioFeatures();
+  } else {
+    document.body.classList.remove("auth-locked");
+    unlockVideoStudioFeatures();
+  }
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aventra Button Test</title>
+</head>
+<body style="background:#111;color:white;text-align:center;padding:40px">
+<h2>🎙️ Aventra Button Test</h2>
+
+<button id="voiceBtn"
+style="display:block;width:100%;padding:25px;background:red;color:white;font-size:22px;border:0;border-radius:12px">
+🎙️ TEST VOICE BUTTON
+</button>
+
+<div id="result" style="margin-top:30px;font-size:20px"></div>
+
+<script>
+document.getElementById("voiceBtn").addEventListener("click", function () {
+  document.getElementById("result").textContent = "✅ BUTTON CLICK WORKS";
+  alert("✅ BUTTON CLICK WORKS");
+});
+</script>
+
+</body>
+</html>
