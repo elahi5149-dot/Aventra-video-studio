@@ -250,18 +250,17 @@
 
 <style>
 #mergeResult {
-  display: none !important;
-}
+  
 </style>
 
 
 <style id="auth-feature-lock-css">
 body.auth-locked .feature-card,
 body.auth-locked .feature-nav {
-  display: none !important;
-}
+  
 </style>
 
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 </head>
 
 <body>
@@ -386,7 +385,7 @@ body.auth-locked .feature-nav {
      YouTube Automation
      ============================ -->
 
-<section class="card feature-card active" id="youtubeAutomationSection">
+<section class="card feature-card" id="youtubeAutomationSection">
 
   <h2>🎬 YouTube Automation</h2>
 
@@ -701,6 +700,8 @@ body.auth-locked .feature-nav {
 </section>
 
 
+
+
   <div class="card" id="videoUploadCard">
 
     <div class="upload">
@@ -760,9 +761,191 @@ body.auth-locked .feature-nav {
 
     <div id="status"></div>
 
+  <footer id="infoFooter" class="info-area">
+
+  <div class="info-menu">
+    <button type="button" class="active" onclick="openInfoPage('aboutPage', this)">
+      ℹ️ About
+    </button>
+
+    <button type="button" onclick="openInfoPage('pricingPage', this)">
+      💰 Pricing
+    </button>
+
+    <button type="button" onclick="openInfoPage('privacyPage', this)">
+      🔒 Privacy Policy
+    </button>
+
+    <button type="button" onclick="openInfoPage('termsPage', this)">
+      📄 Terms of Service
+    </button>
+
+    <button type="button" onclick="openInfoPage('refundPage', this)">
+      💳 Refund Policy
+    </button>
+
+    <button type="button" onclick="openInfoPage('contactPage', this)">
+      📞 Contact & Support
+    </button>
   </div>
 
-  <div
+  <section id="aboutPage" class="info-page">
+    <h2>ℹ️ About Aventra Video Studio</h2>
+
+    <p>
+      Aventra Video Studio is a browser-based video editing and AI video
+      creation platform designed to make video creation simple and accessible.
+    </p>
+
+    <p>
+      Create and edit videos using tools such as Trim, Merge, Music, Text,
+      Effects, Stickers, Animation, Voice Over and YouTube Automation.
+    </p>
+  </section>
+
+  <section id="pricingPage" class="info-page">
+    <h2>💰 Pricing & Plans</h2>
+
+    <p style="text-align:center;">
+      Choose the plan that best fits your video creation needs.
+    </p>
+
+    <div class="pricing-grid">
+
+      <div class="pricing-card">
+        <h3>🆓 Free</h3>
+        <h2>$0</h2>
+        <p>
+          Basic video editing<br>
+          Trim & Merge<br>
+          Music & Text
+        </p>
+      </div>
+
+      <div class="pricing-card">
+        <h3>⭐ Pro</h3>
+        <h2>$9.99</h2>
+        <p>
+          Advanced editing tools<br>
+          AI features<br>
+          Voice Over<br>
+          YouTube Automation
+        </p>
+      </div>
+
+      <div class="pricing-card">
+        <h3>🚀 Premium</h3>
+        <h2>$19.99</h2>
+        <p>
+          All Pro features<br>
+          Higher usage limits<br>
+          Premium AI tools
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="privacyPage" class="info-page">
+    <h2>🔒 Privacy Policy</h2>
+
+    <p>
+      Your privacy is important to us. Aventra Video Studio is designed to
+      process your uploaded content and account information only as required
+      to provide the application's features.
+    </p>
+
+    <p>
+      We do not intentionally sell your personal information to third parties.
+      Uploaded files and generated content may be processed by the services
+      required to provide video and AI functionality.
+    </p>
+
+    <p>
+      By using Aventra Video Studio, you agree to use the platform responsibly
+      and in accordance with applicable laws.
+    </p>
+  </section>
+
+  <section id="termsPage" class="info-page">
+    <h2>📄 Terms of Service</h2>
+    <p>
+      By using Aventra Video Studio, you agree to use the service responsibly
+      and in accordance with applicable laws.
+    </p>
+    <p>
+      You are responsible for the content you upload, create, or process
+      using the platform. You must have the necessary rights and permissions
+      for any content you use.
+    </p>
+    <p>
+      Aventra Video Studio may update, improve, or modify its features and
+      services from time to time.
+    </p>
+  </section>
+
+  <section id="refundPage" class="info-page">
+    <h2>💳 Refund Policy</h2>
+    <p>
+      Payments for digital services and subscriptions are processed securely
+      through our payment provider.
+    </p>
+    <p>
+      If you experience a billing problem or believe you were charged
+      incorrectly, please contact Aventra Video Studio support with your
+      payment details and account information.
+    </p>
+    <p>
+      Refund requests are reviewed on a case-by-case basis in accordance
+      with the applicable subscription and payment terms.
+    </p>
+  </section>
+
+  <section id="contactPage" class="info-page">
+    <h2>📞 Contact & Support</h2>
+
+    <p style="text-align:center;">
+      Need help with Aventra Video Studio? Send us your question below.
+    </p>
+
+    <div style="text-align:center;margin:20px 0 25px;line-height:1.9;">
+      <p>📧 <strong>Email:</strong>
+        <a href="mailto:azlaneah89@gmail.com">azlaneah89@gmail.com</a>
+      </p>
+      <p>💬 <strong>WhatsApp:</strong>
+        <a href="https://wa.me/923221918391" target="_blank">+923221918391</a>
+      </p>
+      <p>📞 <strong>Phone:</strong>
+        <a href="tel:+923449744378">+923449744378</a>
+      </p>
+    </div>
+
+    <div class="contact-form">
+
+      <input type="text" id="supportName" placeholder="Your Name">
+
+      <input type="email" id="supportEmail" placeholder="Your Email">
+
+      <textarea id="supportMessage"
+        placeholder="Describe your question or technical issue"></textarea>
+
+      <button type="button" onclick="submitSupportMessage()">
+        📩 Send Message
+      </button>
+
+      <div id="supportStatus"
+           style="text-align:center;margin-top:12px;">
+      </div>
+
+    </div>
+  </section>
+
+</footer>
+</div>
+
+  
+
+<div
     class="card"
     id="resultCard"
     style="display:none;"
@@ -1426,6 +1609,8 @@ body.auth-locked .feature-nav {
 
 
 
+
+</div>
 
 <script>
 
@@ -3753,7 +3938,7 @@ if (animationBtn) {
         "",
         "#️⃣ HASHTAGS",
         hashtags.value
-      ].join("\n");
+      ].join("");
 
       if (!title.value && !description.value) {
         copyStatus.textContent = "⚠️ پہلے SEO generate کریں۔";
@@ -4039,6 +4224,217 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+</script>
+
+
+<script>
+(function() {
+  function fixUI() {
+    const token = localStorage.getItem("token") || localStorage.getItem("user");
+    const authBox = document.querySelector("#authContainer, #loginSection, .auth-card, form");
+    const appBox = document.querySelector("#mainApp, #studioContainer, .main-content");
+
+    if (!token && authBox && appBox) {
+      appBox.style.setProperty("display", "none", "important");
+    }
+  }
+  document.addEventListener("DOMContentLoaded", fixUI);
+  setTimeout(fixUI, 300);
+})();
+</script>
+
+
+<!-- ============================
+     Aventra Info Pages
+     ============================ -->
+
+<style>
+.info-area {
+  max-width: 1100px;
+  margin: 25px auto;
+  padding: 0 15px;
+}
+
+.info-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.info-menu button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #172342;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.info-menu button:hover,
+.info-menu button.active {
+  background: #5865f2;
+}
+
+.info-page {
+  display: none;
+  background: #172342;
+  color: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 15px;
+  box-sizing: border-box;
+}
+
+.info-page.active {
+  display: block;
+}
+
+.info-page h2 {
+  text-align: center;
+  margin-top: 0;
+}
+
+.info-page p,
+.info-page li {
+  color: #aeb8d8;
+  line-height: 1.8;
+}
+
+.pricing-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.pricing-card {
+  flex: 1;
+  min-width: 220px;
+  padding: 20px;
+  border: 1px solid #39466d;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.contact-form {
+  max-width: 650px;
+  margin: auto;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  padding: 11px;
+  border-radius: 8px;
+  border: 1px solid #39466d;
+  background: #0f1930;
+  color: white;
+}
+
+.contact-form textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.contact-form button {
+  width: 100%;
+  padding: 11px;
+  border: 0;
+  border-radius: 8px;
+  background: #5865f2;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>
+
+
+
+<script>
+function openInfoPage(pageId, button) {
+
+  document.querySelectorAll(".info-page").forEach(function(page) {
+    page.classList.remove("active");
+  });
+
+  document.querySelectorAll(".info-menu button").forEach(function(btn) {
+    btn.classList.remove("active");
+  });
+
+  const page = document.getElementById(pageId);
+
+  if (page) {
+    page.classList.add("active");
+    page.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  if (button) {
+    button.classList.add("active");
+  }
+}
+
+function submitSupportMessage() {
+
+  const name = document.getElementById("supportName").value.trim();
+  const email = document.getElementById("supportEmail").value.trim();
+  const message = document.getElementById("supportMessage").value.trim();
+  const status = document.getElementById("supportStatus");
+
+  if (!name || !email || !message) {
+    status.textContent = "⚠️ Please fill in all fields.";
+    return;
+  }
+
+  status.textContent = "✅ Your support message is ready to send.";
+
+  document.getElementById("supportMessage").value = "";
+}
+</script>
+
+
+
+<style>
+#infoFooter {
+  width: 100%;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #26345f;
+}
+</style>
+
+
+
+
+<script>
+(async function () {
+  try {
+    const response = await fetch("/api/paddle/config");
+    const config = await response.json();
+
+    if (!config.clientToken) {
+      console.error("❌ Paddle Client-side Token not found");
+      return;
+    }
+
+    Paddle.Initialize({
+      token: config.clientToken
+    });
+
+    console.log("✅ Paddle initialized successfully");
+  } catch (error) {
+    console.error("❌ Paddle initialization failed:", error);
+  }
+})();
 </script>
 
 </body>

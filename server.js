@@ -55,6 +55,96 @@ function createToken(user) {
 }
 
 // ============================
+// ============================
+// Contact & Support API
+// ============================
+
+const supportFile = path.join(__dirname, "support-messages.json");
+
+function loadSupportMessages() {
+  try {
+    if (!fs.existsSync(supportFile)) {
+      fs.writeFileSync(supportFile, "[]");
+    }
+
+    return JSON.parse(
+      fs.readFileSync(supportFile, "utf8")
+    );
+  } catch (error) {
+    console.error("Support file error:", error);
+    return [];
+  }
+}
+
+function saveSupportMessages(messages) {
+  fs.writeFileSync(
+    supportFile,
+    JSON.stringify(messages, null, 2)
+  );
+}
+
+app.post("/api/support", (req, res) => {
+  try {
+    const { name, email, message } = req.body || {};
+
+    if (!name || !email || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and message are required"
+      });
+    }
+
+    const cleanName = String(name).trim();
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanMessage = String(message).trim();
+
+    if (!cleanName || !cleanEmail || !cleanMessage) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all fields"
+      });
+    }
+
+    if (cleanMessage.length > 5000) {
+      return res.status(400).json({
+        success: false,
+        message: "Message is too long"
+      });
+    }
+
+    const messages = loadSupportMessages();
+
+    const supportMessage = {
+      id: Date.now().toString(),
+      name: cleanName,
+      email: cleanEmail,
+      message: cleanMessage,
+      createdAt: new Date().toISOString(),
+      status: "open"
+    };
+
+    messages.push(supportMessage);
+    saveSupportMessages(messages);
+
+    console.log(
+      `📩 New support request from ${cleanName} (${cleanEmail})`
+    );
+
+    res.json({
+      success: true,
+      message: "Support request sent successfully"
+    });
+
+  } catch (error) {
+    console.error("Support API error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to send support request"
+    });
+  }
+});
+
 // User Signup
 // ============================
 
@@ -797,6 +887,12 @@ ${script}
 // ============================
 // YouTube Automation - AI Script
 
+
+app.get("/api/paddle/config", (req, res) => {
+  res.json({
+    clientToken: process.env.PADDLE_CLIENT_TOKEN || ""
+  });
+});
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -1620,7 +1716,7 @@ app.post("/api/video/sticker", stickerUpload.fields([
     const outputPath = path.join(outputDir, outputName);
 
     const stickerFilter =
-      `[1:v]scale=${size}:-1,format=rgba,colorchannelmixer=aa=${opacity}[sticker];` +
+      `[1:v]scale=w='trunc(${size}/2)*2':h='trunc(ih*${size}/iw/2)*2',format=rgba,colorchannelmixer=aa=${opacity}[sticker];` +
       `[0:v][sticker]overlay=${overlayPosition}:format=auto[v]`;
 
     execFile(
@@ -1980,15 +2076,43 @@ app.post("/api/youtube/generate-images", async (req, res) => {
         `https://image.pollinations.ai/prompt/${encodedPrompt}` +
         `?width=1280&height=720&nologo=true`;
 
-      const response = await fetch(imageUrl);
+      let imageBuffer = null;
+      let lastError = null;
 
-      if (!response.ok) {
-        throw new Error(
-          `Image generation failed for scene ${sceneNumber}: HTTP ${response.status}`
-        );
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`🖼️ Generating YouTube scene ${sceneNumber} (attempt ${attempt}/3)`);
+
+          const response = await fetch(imageUrl);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          imageBuffer = Buffer.from(await response.arrayBuffer());
+
+          if (!imageBuffer.length) {
+            throw new Error("Empty image response");
+          }
+
+          console.log(`✅ YouTube scene image ${sceneNumber} generated`);
+          break;
+
+        } catch (error) {
+          lastError = error;
+          console.error(`⚠️ Scene ${sceneNumber} attempt ${attempt} failed:`, error.message);
+
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+        }
       }
 
-      const imageBuffer = Buffer.from(await response.arrayBuffer());
+      if (!imageBuffer) {
+        throw new Error(
+          `Image generation failed for scene ${sceneNumber} after 3 attempts: ${lastError?.message || "Unknown error"}`
+        );
+      }
 
       const filename = `scene-${sceneNumber}.jpg`;
       const filepath = path.join(sceneDir, filename);
