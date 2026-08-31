@@ -1,0 +1,10 @@
+[
+  {
+    "id": "1787774701441",
+    "name": "Test User",
+    "email": "test@example.com",
+    "message": "This is a support form test.",
+    "createdAt": "2026-08-26T20:05:01.441Z",
+    "status": "open"
+  }
+]

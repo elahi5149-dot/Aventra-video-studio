@@ -246,6 +246,29 @@
       }
     }
 
+
+.safepay-btn {
+  width: 100%;
+  margin-top: 15px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #5865f2;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.safepay-btn:hover {
+  opacity: 0.9;
+}
+
+.safepay-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 </style>
 
 <style>
@@ -823,7 +846,7 @@ body.auth-locked .feature-nav {
       </div>
 
       <div class="pricing-card">
-        <h3>⭐ Pro</h3>
+        <h3>⭐ Pro Monthly</h3>
         <h2>$9.99</h2>
         <p>
           Advanced editing tools<br>
@@ -831,6 +854,25 @@ body.auth-locked .feature-nav {
           Voice Over<br>
           YouTube Automation
         </p>
+        <button type="button" class="safepay-btn"
+          onclick="startSafepayCheckout(this, 'monthly')">
+          💳 Subscribe Monthly
+        </button>
+      </div>
+
+      <div class="pricing-card">
+        <h3>⭐ Pro Annual</h3>
+        <h2>$99.99</h2>
+        <p>
+          All Pro features<br>
+          AI features<br>
+          Voice Over<br>
+          YouTube Automation
+        </p>
+        <button type="button" class="safepay-btn"
+          onclick="startSafepayCheckout(this, 'annual')">
+          💳 Subscribe Annual
+        </button>
       </div>
 
       <div class="pricing-card">
@@ -4435,6 +4477,53 @@ function submitSupportMessage() {
     console.error("❌ Paddle initialization failed:", error);
   }
 })();
+</script>
+
+
+<script>
+async function startSafepayCheckout(button, plan) {
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "⏳ Opening Checkout...";
+    }
+
+    const response = await fetch("/api/payment/safepay/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        plan: plan
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.checkoutUrl) {
+      throw new Error(
+        data.message || "Unable to create Safepay checkout"
+      );
+    }
+
+    window.location.href = data.checkoutUrl;
+
+  } catch (error) {
+    console.error("❌ Safepay checkout error:", error);
+
+    alert(
+      "Unable to open payment checkout. Please try again."
+    );
+
+    if (button) {
+      button.disabled = false;
+      button.textContent =
+        plan === "annual"
+          ? "💳 Subscribe Annual"
+          : "💳 Subscribe Monthly";
+    }
+  }
+}
 </script>
 
 </body>
