@@ -15,7 +15,13 @@ const groq = new Groq({
 
 // ============================
 
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    if (req.originalUrl === "/api/payment/safepay/webhook") {
+      req.rawBody = Buffer.from(buf);
+    }
+  }
+}));
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -2511,6 +2517,189 @@ app.post("/api/youtube/create-video", async (req, res) => {
     });
   }
 });
+
+
+// ============================
+// Safepay Webhook
+// ============================
+const crypto = require("crypto");
+
+app.post("/api/payment/safepay/webhook", (req, res) => {
+  try {
+    const signature = req.headers["x-sfpy-signature"];
+    const timestamp = req.headers["x-sfpy-timestamp"];
+    const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
+    const rawBody = req.rawBody;
+
+    if (!signature || !timestamp || !secret || !rawBody) {
+      console.error("❌ Safepay webhook verification data missing");
+      return res.status(400).send("Invalid webhook request");
+    }
+
+    // Safepay signature:
+    // HMAC-SHA256(base64-decoded-secret, timestamp + "." + raw body)
+    const key = Buffer.from(secret, "base64");
+
+    const hmac = crypto.createHmac("sha256", key);
+    hmac.update(String(timestamp));
+    hmac.update(".");
+    hmac.update(rawBody);
+
+    const expectedSignature =
+      "sha256=" + hmac.digest("hex");
+
+    const provided = Buffer.from(String(signature));
+    const expected = Buffer.from(expectedSignature);
+
+    if (
+      provided.length !== expected.length ||
+      !crypto.timingSafeEqual(provided, expected)
+    ) {
+      console.error("❌ Safepay webhook signature invalid");
+      return res.status(401).send("Invalid signature");
+    }
+
+    const event = req.body || {};
+
+    console.log(
+      "✅ Safepay webhook verified:",
+      JSON.stringify(event, null, 2)
+    );
+
+    // IMPORTANT:
+    // For now we only verify and log the event.
+    // We will activate the user's plan after confirming
+    // the exact Sandbox payment.completed payload.
+
+    return res.status(200).send("OK");
+
+  } catch (error) {
+    console.error(
+      "❌ Safepay webhook error:",
+      error?.message || error
+    );
+
+    return res.status(500).send("Webhook processing failed");
+  }
+});
+
+// ============================
+// Safepay Sandbox Payments
+// ============================
+
+const Safepay = require("@sfpy/node-core");
+
+const safepay = Safepay(process.env.SAFEPAY_SECRET_KEY, {
+  authType: "secret",
+  host: process.env.SAFEPAY_BASE_URL || "https://sandbox.api.getsafepay.com"
+});
+
+app.post("/api/payment/safepay/create", async (req, res) => {
+  try {
+    const { plan } = req.body;
+
+    const plans = {
+      monthly: {
+        amount: 999,
+        name: "Aventra Pro Monthly"
+      },
+      annual: {
+        amount: 9999,
+        name: "Aventra Pro Annual"
+      }
+    };
+
+    const selectedPlan = plans[plan];
+
+    if (!selectedPlan) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid plan"
+      });
+    }
+
+    const orderId =
+      `AVENTRA-${plan.toUpperCase()}-${Date.now()}`;
+
+    // 1. Create fresh Safepay payment tracker
+    const response =
+      await safepay.payments.session.setup({
+        merchant_api_key:
+          process.env.SAFEPAY_PUBLIC_KEY,
+        intent: "CYBERSOURCE",
+        mode: "payment",
+        entry_mode: "raw",
+        currency: "USD",
+        amount: selectedPlan.amount,
+        metadata: {
+          order_id: orderId
+        }
+      });
+
+    const tracker =
+      response?.data?.tracker;
+
+    if (!tracker?.token) {
+      throw new Error(
+        "Safepay tracker token not received"
+      );
+    }
+
+    // 2. Get fresh Passport token (TBT)
+    const passport =
+      await safepay.client.passport.create({});
+
+    const tbt = passport?.data;
+
+    if (!tbt) {
+      throw new Error(
+        "Safepay passport token not received"
+      );
+    }
+
+    // 3. Create authenticated checkout URL
+    const checkoutUrl =
+      safepay.checkout.createCheckoutUrl({
+        env: "sandbox",
+        tbt,
+        tracker: tracker.token,
+        source: "hosted",
+        order_id: orderId,
+        cancel_url:
+          "http://localhost:3000/",
+        redirect_url:
+          "http://localhost:3000/",
+        webhooks: true
+      });
+
+    console.log(
+      `✅ Safepay ${plan} checkout created`
+    );
+
+    res.json({
+      success: true,
+      plan,
+      amount: selectedPlan.amount,
+      checkoutUrl
+    });
+
+  } catch (error) {
+    console.error(
+      "❌ Safepay payment error:",
+      error?.response?.data ||
+      error?.message ||
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      message:
+        error?.message ||
+        "Safepay payment creation failed"
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Aventra Video Studio running on port ${PORT}`);
 });
