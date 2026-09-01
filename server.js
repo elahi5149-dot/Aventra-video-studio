@@ -270,11 +270,20 @@ app.post("/api/auth/login", async (req, res) => {
 
     const cleanEmail = String(email).trim().toLowerCase();
 
-    const users = loadUsers();
+    let user;
 
-    const user = users.find(
-      user => user.email === cleanEmail
-    );
+    if (pool) {
+      const result = await pool.query(
+        "SELECT id, name, email, password, plan FROM users WHERE email = $1",
+        [cleanEmail]
+      );
+      user = result.rows[0];
+    } else {
+      const users = loadUsers();
+      user = users.find(
+        user => user.email === cleanEmail
+      );
+    }
 
     if (!user) {
       return res.status(401).json({
