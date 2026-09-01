@@ -2112,14 +2112,18 @@ app.post("/api/youtube/generate-images", async (req, res) => {
       fs.mkdirSync(sceneDir, { recursive: true });
     }
 
+    // Generate up to 4 images at the same time
+    const concurrency = 4;
     const results = [];
+    let nextIndex = 0;
 
-    for (const scene of safeScenes) {
+    async function generateScene(scene, index) {
       if (!scene?.prompt) {
-        continue;
+        return null;
       }
 
-      const sceneNumber = parseInt(scene.scene) || (results.length + 1);
+      const sceneNumber =
+        parseInt(scene.scene) || (index + 1);
 
       const encodedPrompt = encodeURIComponent(
         String(scene.prompt).trim()
@@ -2134,7 +2138,9 @@ app.post("/api/youtube/generate-images", async (req, res) => {
 
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          console.log(`🖼️ Generating YouTube scene ${sceneNumber} (attempt ${attempt}/3)`);
+          console.log(
+            `🖼️ Generating YouTube scene ${sceneNumber} (attempt ${attempt}/3)`
+          );
 
           const response = await fetch(imageUrl);
 
@@ -2142,28 +2148,41 @@ app.post("/api/youtube/generate-images", async (req, res) => {
             throw new Error(`HTTP ${response.status}`);
           }
 
-          imageBuffer = Buffer.from(await response.arrayBuffer());
+          imageBuffer = Buffer.from(
+            await response.arrayBuffer()
+          );
 
           if (!imageBuffer.length) {
             throw new Error("Empty image response");
           }
 
-          console.log(`✅ YouTube scene image ${sceneNumber} generated`);
+          console.log(
+            `✅ YouTube scene image ${sceneNumber} generated`
+          );
+
           break;
 
         } catch (error) {
           lastError = error;
-          console.error(`⚠️ Scene ${sceneNumber} attempt ${attempt} failed:`, error.message);
+
+          console.error(
+            `⚠️ Scene ${sceneNumber} attempt ${attempt} failed:`,
+            error.message
+          );
 
           if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve =>
+              setTimeout(resolve, 3000)
+            );
           }
         }
       }
 
       if (!imageBuffer) {
         throw new Error(
-          `Image generation failed for scene ${sceneNumber} after 3 attempts: ${lastError?.message || "Unknown error"}`
+          `Image generation failed for scene ${sceneNumber} after 3 attempts: ${
+            lastError?.message || "Unknown error"
+          }`
         );
       }
 
@@ -2172,16 +2191,49 @@ app.post("/api/youtube/generate-images", async (req, res) => {
 
       fs.writeFileSync(filepath, imageBuffer);
 
-      results.push({
+      console.log(
+        `✅ YouTube scene image ${sceneNumber} saved`
+      );
+
+      return {
         scene: sceneNumber,
         summary: scene.summary || "",
         prompt: scene.prompt,
         duration: Number(scene.duration) || 8,
         imageUrl: `/outputs/youtube-scenes/${filename}`
-      });
-
-      console.log(`✅ YouTube scene image ${sceneNumber} saved`);
+      };
     }
+
+    async function worker() {
+      while (true) {
+        const index = nextIndex++;
+
+        if (index >= safeScenes.length) {
+          return;
+        }
+
+        const result = await generateScene(
+          safeScenes[index],
+          index
+        );
+
+        if (result) {
+          results.push(result);
+        }
+      }
+    }
+
+    const workers = Array.from(
+      {
+        length: Math.min(concurrency, safeScenes.length)
+      },
+      () => worker()
+    );
+
+    await Promise.all(workers);
+
+    // Keep scene order
+    results.sort((a, b) => a.scene - b.scene);
 
     res.json({
       success: true,
@@ -2190,16 +2242,19 @@ app.post("/api/youtube/generate-images", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ YouTube scene images error:", error);
+    console.error(
+      "❌ YouTube scene images error:",
+      error
+    );
 
     res.status(500).json({
       success: false,
-      message: error?.message || "Scene image generation failed"
+      message:
+        error?.message ||
+        "Scene image generation failed"
     });
   }
 });
-
-
 // ============================
 // ============================
 // YouTube Automation - Create Video from Scene Images
