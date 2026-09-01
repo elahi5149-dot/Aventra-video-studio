@@ -2280,7 +2280,7 @@ app.post("/api/youtube/create-video", async (req, res) => {
           "-c:v", "libx264",
           "-profile:v", "baseline",
           "-level", "3.1",
-          "-preset", "veryfast",
+          "-preset", "ultrafast",
           "-crf", "23",
           "-pix_fmt", "yuv420p",
           "-an",
@@ -2347,15 +2347,8 @@ app.post("/api/youtube/create-video", async (req, res) => {
         "-safe", "0",
         "-i", listPath,
 
-        "-c:v", "libx264",
-        "-profile:v", "baseline",
-        "-level", "3.1",
-        "-preset", "veryfast",
-        "-crf", "23",
-        "-pix_fmt", "yuv420p",
-        "-r", "30",
+        "-c", "copy",
         "-an",
-        "-movflags", "+faststart",
 
         silentVideoPath
       ],
@@ -2470,13 +2463,7 @@ app.post("/api/youtube/create-video", async (req, res) => {
         "-map", "0:v:0",
         "-map", "1:a:0",
 
-        "-c:v", "libx264",
-        "-profile:v", "baseline",
-        "-level", "3.1",
-        "-preset", "veryfast",
-        "-crf", "23",
-        "-pix_fmt", "yuv420p",
-        "-r", "30",
+        "-c:v", "copy",
 
         "-c:a", "aac",
         "-profile:a", "aac_low",
