@@ -179,45 +179,6 @@ app.post("/api/support", (req, res) => {
   }
 });
 
-// TEMP USER MIGRATION
-app.post("/api/temp-migrate-user", async (req, res) => {
-  try {
-    if (!pool) return res.status(500).json({ success: false, message: "Database unavailable" });
-
-    const email = process.env.MIGRATE_EMAIL;
-    const password = process.env.MIGRATE_PASSWORD;
-
-    if (!email || !password) {
-      return res.status(500).json({ success: false, message: "Migration credentials missing" });
-    }
-
-    const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-
-    if (existing.rows.length) {
-      return res.json({ success: true, message: "User already exists in database" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = {
-      id: Date.now().toString(),
-      name: "Fazal",
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      plan: "free"
-    };
-
-    await pool.query(
-      "INSERT INTO users (id, name, email, password, plan) VALUES ($1, $2, $3, $4, $5)",
-      [user.id, user.name, user.email, user.password, user.plan]
-    );
-
-    res.json({ success: true, message: "User migrated successfully" });
-  } catch (error) {
-    console.error("Migration error:", error);
-    res.status(500).json({ success: false, message: "Migration failed" });
-  }
-});
-
 // User Signup
 // ============================
 
