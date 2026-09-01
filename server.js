@@ -22,6 +22,34 @@ app.use(express.json({
     }
   }
 }));
+const { Pool } = require("pg");
+
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    })
+  : null;
+
+async function initDatabase() {
+  if (!pool) {
+    console.log("ℹ️ DATABASE_URL not set - using local users.json");
+    return;
+  }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      plan TEXT DEFAULT 'free',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log("✅ PostgreSQL users table ready");
+}
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -2700,6 +2728,11 @@ app.post("/api/payment/safepay/create", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Aventra Video Studio running on port ${PORT}`);
+app.listen(PORT, async () => {
+  try {
+    await initDatabase();
+    console.log(`Aventra Video Studio running on port ${PORT}`);
+  } catch (error) {
+    console.error("❌ Database initialization failed:", error);
+  }
 });
