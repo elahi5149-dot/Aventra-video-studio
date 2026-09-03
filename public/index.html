@@ -784,7 +784,10 @@ body.auth-locked .feature-nav {
 
     <div id="status"></div>
 
-  <footer id="infoFooter" class="info-area">
+
+</div>
+
+<footer id="infoFooter" class="info-area">
 
   <div class="info-menu">
     <button type="button" class="active" onclick="openInfoPage('aboutPage', this)">
@@ -983,7 +986,6 @@ body.auth-locked .feature-nav {
   </section>
 
 </footer>
-</div>
 
   
 
@@ -1780,7 +1782,7 @@ trimBtn.addEventListener("click", async () => {
     status.textContent =
       "⏳ Processing current video...";
 
-    const response = await fetch(
+    const response = await aventraFetch(
       "/api/video/trim",
       {
         method: "POST",
@@ -1864,7 +1866,7 @@ mergeBtn.addEventListener("click", async () => {
   mergeStatus.textContent = "⏳ Merging videos...";
 
   try {
-    const response = await fetch("/api/video/merge", {
+    const response = await aventraFetch("/api/video/merge", {
       method: "POST",
       body: formData
     });
@@ -1942,7 +1944,7 @@ if (musicFile && musicVolume && volumeValue && musicBtn) {
 
     try {
 
-      const response = await fetch("/api/video/music", {
+      const response = await aventraFetch("/api/video/music", {
         method: "POST",
         body: formData
       });
@@ -2036,7 +2038,7 @@ if (textBtn) {
 
     try {
 
-      const response = await fetch("/api/video/text", {
+      const response = await aventraFetch("/api/video/text", {
         method: "POST",
         body: formData
       });
@@ -2480,7 +2482,7 @@ if (effectsBtn) {
 
     try {
 
-      const response = await fetch(
+      const response = await aventraFetch(
         "/api/video/effects",
         {
           method: "POST",
@@ -2844,7 +2846,7 @@ if (
         stickerOpacity.value
       );
 
-      const response = await fetch(
+      const response = await aventraFetch(
         "/api/video/sticker",
         {
           method: "POST",
@@ -2961,7 +2963,7 @@ if (animationBtn) {
       formData.append("animation", type);
       formData.append("duration", duration);
 
-      const response = await fetch(
+      const response = await aventraFetch(
         "/api/video/animation",
         {
           method: "POST",
@@ -4158,8 +4160,6 @@ function showLoggedInUser(user) {
 
   authSection.style.display = "none";
 
-  unlockVideoStudioFeatures();
-
   userBar.style.display = "block";
 
   loggedUserName.textContent =
@@ -4168,8 +4168,17 @@ function showLoggedInUser(user) {
   loggedUserEmail.textContent =
     user.email || "";
 
+  const userPlan =
+    String(user.plan || "free").toLowerCase();
+
   loggedUserPlan.textContent =
-    user.plan || "free";
+    userPlan;
+
+  if (userPlan === "pro" || userPlan === "premium") {
+    unlockVideoStudioFeatures();
+  } else {
+    lockVideoStudioFeatures();
+  }
 }
 
 function logoutUser() {
@@ -4223,6 +4232,32 @@ if (savedUser && savedToken) {
 
 <script>
 // ============================
+// Aventra Authenticated API Helper
+// ============================
+
+async function aventraFetch(url, options = {}) {
+  const token = localStorage.getItem("aventra_token");
+
+  if (!token) {
+    throw new Error("Authentication required");
+  }
+
+  const requestOptions = {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      "Authorization": "Bearer " + token
+    }
+  };
+
+  return fetch(url, requestOptions);
+}
+
+</script>
+
+
+<script>
+// ============================
 // Aventra Feature Authentication Lock
 // ============================
 
@@ -4256,13 +4291,30 @@ function unlockVideoStudioFeatures() {
 document.addEventListener("DOMContentLoaded", () => {
 
   const token = localStorage.getItem("aventra_token");
+  const savedUser = localStorage.getItem("aventra_user");
 
-  if (!token) {
+  if (!token || !savedUser) {
     document.body.classList.add("auth-locked");
     lockVideoStudioFeatures();
-  } else {
+    return;
+  }
+
+  try {
+    const user = JSON.parse(savedUser);
+    const userPlan =
+      String(user.plan || "free").toLowerCase();
+
     document.body.classList.remove("auth-locked");
-    unlockVideoStudioFeatures();
+
+    if (userPlan === "pro" || userPlan === "premium") {
+      unlockVideoStudioFeatures();
+    } else {
+      lockVideoStudioFeatures();
+    }
+
+  } catch (error) {
+    console.error("❌ Saved user data error:", error);
+    lockVideoStudioFeatures();
   }
 
 });
@@ -4488,7 +4540,7 @@ async function startSafepayCheckout(button, plan) {
       button.textContent = "⏳ Opening Checkout...";
     }
 
-    const response = await fetch("/api/payment/safepay/create", {
+    const response = await aventraFetch("/api/payment/safepay/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

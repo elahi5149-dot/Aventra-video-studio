@@ -362,16 +362,85 @@ function authenticateUser(req, res, next) {
 }
 
 // ============================
+// Subscription Authentication Middleware
+// ============================
+
+async function requireActiveSubscription(req, res, next) {
+  try {
+    let user;
+
+    if (pool) {
+      const result = await pool.query(
+        "SELECT id, name, email, plan, created_at FROM users WHERE id = $1",
+        [req.user.id]
+      );
+
+      user = result.rows[0];
+    } else {
+      const users = loadUsers();
+
+      user = users.find(
+        user => user.id === req.user.id
+      );
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const userPlan =
+      String(user.plan || "free").toLowerCase();
+
+    if (userPlan !== "pro" && userPlan !== "premium") {
+      return res.status(403).json({
+        success: false,
+        message: "Active subscription required"
+      });
+    }
+
+    req.currentUser = user;
+    req.userPlan = userPlan;
+
+    next();
+
+  } catch (error) {
+    console.error(
+      "❌ Subscription check error:",
+      error?.message || error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Subscription verification failed"
+    });
+  }
+}
+
+// ============================
 // Current User
 // ============================
 
-app.get("/api/auth/me", authenticateUser, (req, res) => {
+app.get("/api/auth/me", authenticateUser, async (req, res) => {
 
-  const users = loadUsers();
+  let user;
 
-  const user = users.find(
-    user => user.id === req.user.id
-  );
+  if (pool) {
+    const result = await pool.query(
+      "SELECT id, name, email, plan, created_at FROM users WHERE id = $1",
+      [req.user.id]
+    );
+
+    user = result.rows[0];
+  } else {
+    const users = loadUsers();
+
+    user = users.find(
+      user => user.id === req.user.id
+    );
+  }
 
   if (!user) {
     return res.status(404).json({
@@ -387,7 +456,7 @@ app.get("/api/auth/me", authenticateUser, (req, res) => {
       name: user.name,
       email: user.email,
       plan: user.plan,
-      createdAt: user.createdAt
+      createdAt: user.createdAt || user.created_at
     }
   });
 });
@@ -435,7 +504,7 @@ app.get("/api/plans", (req, res) => {
 // YouTube Automation - AI Voice
 // ============================
 
-app.post("/api/youtube/voice", async (req, res) => {
+app.post("/api/youtube/voice", authenticateUser, requireActiveSubscription, async (req, res) => {
   try {
     const { text, voice = "ur-PK-UzmaNeural" } = req.body || {};
 
@@ -502,7 +571,7 @@ app.post("/api/youtube/voice", async (req, res) => {
 
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/api/youtube/script", async (req, res) => {
+app.post("/api/youtube/script", authenticateUser, requireActiveSubscription, async (req, res) => {
   try {
     const {
       topic,
@@ -603,7 +672,7 @@ if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
 // YouTube Automation - AI Image
 // ============================
 
-app.post("/api/youtube/image", async (req, res) => {
+app.post("/api/youtube/image", authenticateUser, requireActiveSubscription, async (req, res) => {
   try {
     const { prompt } = req.body || {};
 
@@ -638,7 +707,7 @@ app.post("/api/youtube/image", async (req, res) => {
 // ============================
  // YouTube Automation - Thumbnail
  // ============================
- app.post("/api/youtube/thumbnail", async (req, res) => {
+ app.post("/api/youtube/thumbnail", authenticateUser, requireActiveSubscription, async (req, res) => {
   try {
     const { prompt } = req.body || {};
 
@@ -712,7 +781,7 @@ app.post("/api/youtube/image", async (req, res) => {
 // ============================
  // YouTube Automation - SEO
  // ============================
- app.post("/api/youtube/seo", async (req, res) => {
+ app.post("/api/youtube/seo", authenticateUser, requireActiveSubscription, async (req, res) => {
    try {
      const {
        topic,
@@ -815,7 +884,7 @@ Requirements:
    }
  });
 
-app.post("/api/youtube/scenes", async (req, res) => {
+app.post("/api/youtube/scenes", authenticateUser, requireActiveSubscription, async (req, res) => {
   try {
     const { script, sceneCount = 8 } = req.body || {};
 
@@ -988,7 +1057,7 @@ const musicUpload = multer({
 // Add Text to Video
 // ============================
 
-app.post("/api/video/text", musicUpload.single("video"), (req, res) => {
+app.post("/api/video/text", authenticateUser, requireActiveSubscription, musicUpload.single("video"), (req, res) => {
 
   try {
 
@@ -1118,7 +1187,7 @@ app.post("/api/video/text", musicUpload.single("video"), (req, res) => {
 // Advanced Video Effects
 // ============================
 
-app.post("/api/video/effects", musicUpload.single("video"), (req, res) => {
+app.post("/api/video/effects", authenticateUser, requireActiveSubscription, musicUpload.single("video"), (req, res) => {
 
   try {
 
@@ -1359,7 +1428,7 @@ app.post("/api/video/effects", musicUpload.single("video"), (req, res) => {
 // Video Upload + Trim
 // ============================
 
-app.post("/api/video/trim", upload.single("video"), (req, res) => {
+app.post("/api/video/trim", authenticateUser, requireActiveSubscription, upload.single("video"), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -1450,7 +1519,7 @@ app.post("/api/video/trim", upload.single("video"), (req, res) => {
 // Add Music to Video
 // ============================
 
-app.post("/api/video/music", musicUpload.fields([
+app.post("/api/video/music", authenticateUser, requireActiveSubscription, musicUpload.fields([
   { name: "video", maxCount: 1 },
   { name: "music", maxCount: 1 }
 ]), (req, res) => {
@@ -1572,7 +1641,7 @@ app.use(
 // Merge Videos
 // ============================
 
-app.post("/api/video/merge", upload.array("videos", 10), (req, res) => {
+app.post("/api/video/merge", authenticateUser, requireActiveSubscription, upload.array("videos", 10), (req, res) => {
   try {
     if (!req.files || req.files.length < 2) {
       return res.status(400).json({
@@ -1724,7 +1793,7 @@ const stickerUpload = multer({
   }
 });
 
-app.post("/api/video/sticker", stickerUpload.fields([
+app.post("/api/video/sticker", authenticateUser, requireActiveSubscription, stickerUpload.fields([
   { name: "video", maxCount: 1 },
   { name: "sticker", maxCount: 1 }
 ]), (req, res) => {
@@ -1854,7 +1923,7 @@ app.post("/api/video/sticker", stickerUpload.fields([
 
 // ============================
 
-app.post("/api/video/animation", musicUpload.single("video"), (req, res) => {
+app.post("/api/video/animation", authenticateUser, requireActiveSubscription, musicUpload.single("video"), (req, res) => {
 
   try {
 
@@ -2093,7 +2162,7 @@ app.post("/api/video/animation", musicUpload.single("video"), (req, res) => {
 // ============================
 // YouTube Automation - Generate Scene Images
 // ============================
-app.post("/api/youtube/generate-images", async (req, res) => {
+app.post("/api/youtube/generate-images", authenticateUser, requireActiveSubscription, async (req, res) => {
   try {
     const { scenes } = req.body || {};
 
@@ -2113,7 +2182,7 @@ app.post("/api/youtube/generate-images", async (req, res) => {
     }
 
     // Generate up to 4 images at the same time
-    const concurrency = 4;
+    const concurrency = 1;
     const results = [];
     let nextIndex = 0;
 
@@ -2259,7 +2328,7 @@ app.post("/api/youtube/generate-images", async (req, res) => {
 // ============================
 // YouTube Automation - Create Video from Scene Images
 // ============================
-app.post("/api/youtube/create-video", async (req, res) => {
+app.post("/api/youtube/create-video", authenticateUser, requireActiveSubscription, async (req, res) => {
   let workDir = null;
 
   try {
@@ -2683,7 +2752,7 @@ const safepay = Safepay(process.env.SAFEPAY_SECRET_KEY, {
   host: process.env.SAFEPAY_BASE_URL || "https://sandbox.api.getsafepay.com"
 });
 
-app.post("/api/payment/safepay/create", async (req, res) => {
+app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
   try {
     const { plan } = req.body;
 
@@ -2721,7 +2790,9 @@ app.post("/api/payment/safepay/create", async (req, res) => {
         currency: "USD",
         amount: selectedPlan.amount,
         metadata: {
-          order_id: orderId
+          order_id: orderId,
+          aventra_user_id: req.user.id,
+          aventra_plan: plan
         }
       });
 
