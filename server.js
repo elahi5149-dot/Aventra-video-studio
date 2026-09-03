@@ -2684,6 +2684,15 @@ const crypto = require("crypto");
 
 app.post("/api/payment/safepay/webhook", (req, res) => {
   try {
+    console.log("🔎 Safepay webhook received");
+    console.log("🔎 Safepay webhook headers:", {
+      signaturePresent: Boolean(req.headers["x-sfpy-signature"]),
+      timestampPresent: Boolean(req.headers["x-sfpy-timestamp"]),
+      contentType: req.headers["content-type"] || null,
+      userAgent: req.headers["user-agent"] || null
+    });
+    console.log("🔎 Safepay webhook body:", JSON.stringify(req.body || {}, null, 2));
+
     const signature = req.headers["x-sfpy-signature"];
     const timestamp = req.headers["x-sfpy-timestamp"];
     const secret = process.env.SAFEPAY_WEBHOOK_SECRET;
