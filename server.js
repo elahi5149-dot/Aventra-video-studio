@@ -3,12 +3,19 @@ const Groq = require("groq-sdk");
 const { fal } = require("@fal-ai/client");
 
 const express = require("express");
+const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { execFile, spawnSync } = require("child_process");
 
 const app = express();
+
+app.use(cors({
+  origin: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
