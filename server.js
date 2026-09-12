@@ -2689,7 +2689,7 @@ app.post("/api/youtube/create-video", authenticateUser, requireActiveSubscriptio
 // ============================
 const crypto = require("crypto");
 
-app.post("/api/payment/safepay/webhook", (req, res) => {
+app.post("/api/payment/safepay/webhook", async (req, res) => {
   try {
     console.log("🔎 Safepay webhook received");
     console.log("🔎 Safepay webhook headers:", {
@@ -2740,10 +2740,151 @@ app.post("/api/payment/safepay/webhook", (req, res) => {
       JSON.stringify(event, null, 2)
     );
 
-    // IMPORTANT:
-    // For now we only verify and log the event.
-    // We will activate the user's plan after confirming
-    // the exact Sandbox payment.completed payload.
+    // ============================
+    // Activate Aventra subscription
+    // ============================
+
+    // Safepay metadata may be nested differently depending
+    // on the webhook event shape, so search the verified
+    // payload recursively.
+    function findValue(obj, key) {
+      if (!obj || typeof obj !== "object") return null;
+
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        return obj[key];
+      }
+
+      for (const value of Object.values(obj)) {
+        if (value && typeof value === "object") {
+          const found = findValue(value, key);
+          if (found !== null && found !== undefined) {
+            return found;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    const eventName =
+      String(
+        event.type ||
+        event.event ||
+        event.name ||
+        event.data?.type ||
+        ""
+      ).toLowerCase();
+
+    const status =
+      String(
+        event.status ||
+        event.data?.status ||
+        event.data?.payment?.status ||
+        findValue(event, "status") ||
+        ""
+      ).toLowerCase();
+
+    const userId =
+      findValue(event, "aventra_user_id");
+
+    const aventraPlan =
+      String(
+        findValue(event, "aventra_plan") || ""
+      ).toLowerCase();
+
+    const successfulStatuses = [
+      "completed",
+      "paid",
+      "succeeded",
+      "success",
+      "successful",
+      "authorized"
+    ];
+
+    const successfulEvent =
+      !status || successfulStatuses.includes(status);
+
+    const paymentEvent =
+      !eventName ||
+      eventName.includes("payment") ||
+      eventName.includes("transaction") ||
+      eventName.includes("checkout");
+
+    console.log("🔎 Aventra payment details:", {
+      eventName,
+      status,
+      userId,
+      aventraPlan,
+      successfulEvent,
+      paymentEvent
+    });
+
+    if (!userId) {
+      console.error(
+        "❌ Aventra user ID missing from Safepay webhook metadata"
+      );
+      return res.status(400).send("User ID missing");
+    }
+
+    if (!["monthly", "annual"].includes(aventraPlan)) {
+      console.error(
+        "❌ Invalid Aventra plan in Safepay webhook:",
+        aventraPlan
+      );
+      return res.status(400).send("Invalid plan");
+    }
+
+    if (!paymentEvent || !successfulEvent) {
+      console.log(
+        "ℹ️ Safepay webhook received but payment is not successful yet"
+      );
+      return res.status(200).send("Webhook received");
+    }
+
+    // Activate PostgreSQL user
+    if (pool) {
+      const result = await pool.query(
+        "UPDATE users SET plan = 'pro' WHERE id = $1 RETURNING id, email, plan",
+        [String(userId)]
+      );
+
+      if (result.rowCount === 0) {
+        console.error(
+          "❌ PostgreSQL user not found:",
+          userId
+        );
+        return res.status(404).send("User not found");
+      }
+
+      console.log(
+        "✅ Aventra Pro activated:",
+        result.rows[0]
+      );
+
+    } else {
+      // Activate local users.json user
+      const users = loadUsers();
+
+      const userIndex = users.findIndex(
+        user => String(user.id) === String(userId)
+      );
+
+      if (userIndex === -1) {
+        console.error(
+          "❌ Local user not found:",
+          userId
+        );
+        return res.status(404).send("User not found");
+      }
+
+      users[userIndex].plan = "pro";
+      saveUsers(users);
+
+      console.log(
+        "✅ Aventra Pro activated for local user:",
+        users[userIndex].email
+      );
+    }
 
     return res.status(200).send("OK");
 

@@ -3064,7 +3064,7 @@ if (animationBtn) {
 
     try {
 
-      const response = await fetch("/api/youtube/script", {
+      const response = await fetch(aventraApiUrl("/api/youtube/script"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -3123,7 +3123,7 @@ if (animationBtn) {
 
       try {
 
-        const response = await fetch("/api/youtube/voice", {
+        const response = await fetch(aventraApiUrl("/api/youtube/voice"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -3586,7 +3586,7 @@ if (animationBtn) {
         "📝 Step 1/4: AI Script تیار ہو رہا ہے...";
 
       const scriptResponse =
-        await fetch("/api/youtube/script", {
+        await fetch(aventraApiUrl("/api/youtube/script"), {
           method: "POST",
           headers: {
             "Content-Type":
@@ -3632,7 +3632,7 @@ if (animationBtn) {
         "🎞️ Step 2/4: Visual scenes تیار ہو رہے ہیں...";
 
       const scenesResponse =
-        await fetch("/api/youtube/scenes", {
+        await fetch(aventraApiUrl("/api/youtube/scenes"), {
           method: "POST",
           headers: {
             "Content-Type":
@@ -3836,7 +3836,7 @@ if (animationBtn) {
     link.style.display = "none";
 
     try {
-      const response = await fetch("/api/youtube/thumbnail", {
+      const response = await fetch(aventraApiUrl("/api/youtube/thumbnail"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -3917,7 +3917,7 @@ if (animationBtn) {
     status.textContent = "🔎 AI YouTube SEO تیار کر رہا ہے...";
 
     try {
-      const response = await fetch("/api/youtube/seo", {
+      const response = await fetch(aventraApiUrl("/api/youtube/seo"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -4094,8 +4094,8 @@ authBtn.addEventListener("click", async () => {
 
     const endpoint =
       authMode === "signup"
-        ? "/api/auth/signup"
-        : "/api/auth/login";
+        ? aventraApiUrl("/api/auth/signup")
+        : aventraApiUrl("/api/auth/login");
 
     const body =
       authMode === "signup"
@@ -4232,6 +4232,22 @@ if (savedUser && savedToken) {
 
 <script>
 // ============================
+// Aventra API Base URL
+// ============================
+const AVENTRA_API_BASE = "https://aventra-video-studio.onrender.com";
+
+function aventraApiUrl(url) {
+  if (typeof url === "string" && url.startsWith("/api/")) {
+    return AVENTRA_API_BASE + url;
+  }
+  return url;
+}
+
+</script>
+
+
+<script>
+// ============================
 // Aventra Authenticated API Helper
 // ============================
 
@@ -4250,7 +4266,7 @@ async function aventraFetch(url, options = {}) {
     }
   };
 
-  return fetch(url, requestOptions);
+  return fetch(aventraApiUrl(url), requestOptions);
 }
 
 </script>
@@ -4512,7 +4528,7 @@ function submitSupportMessage() {
 <script>
 (async function () {
   try {
-    const response = await fetch("/api/paddle/config");
+    const response = await fetch(aventraApiUrl("/api/paddle/config"));
     const config = await response.json();
 
     if (!config.clientToken) {
