@@ -2983,9 +2983,9 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
         source: "hosted",
         order_id: orderId,
         cancel_url:
-          "http://localhost:3000/",
+          "https://aventra-video-studio.onrender.com/",
         redirect_url:
-          "http://localhost:3000/",
+          "https://aventra-video-studio.onrender.com/",
         webhooks: true
       });
 
