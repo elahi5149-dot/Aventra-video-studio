@@ -2784,13 +2784,26 @@ app.post("/api/payment/safepay/webhook", async (req, res) => {
         ""
       ).toLowerCase();
 
+    const webhookOrderId =
+      String(
+        findValue(event, "order_id") ||
+        findValue(event, "orderId") ||
+        ""
+      );
+
+    const orderParts = webhookOrderId.split("-");
+
     const userId =
-      findValue(event, "aventra_user_id");
+      orderParts.length >= 4 &&
+      orderParts[0] === "AVENTRA"
+        ? orderParts[2]
+        : null;
 
     const aventraPlan =
-      String(
-        findValue(event, "aventra_plan") || ""
-      ).toLowerCase();
+      orderParts.length >= 4 &&
+      orderParts[0] === "AVENTRA"
+        ? String(orderParts[1]).toLowerCase()
+        : "";
 
     const successfulStatuses = [
       "completed",
@@ -2934,7 +2947,7 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
     }
 
     const orderId =
-      `AVENTRA-${plan.toUpperCase()}-${Date.now()}`;
+      `AVENTRA-${plan.toUpperCase()}-${String(req.user.id)}-${Date.now()}`;
 
     // 1. Create fresh Safepay payment tracker
     const response =
@@ -2947,9 +2960,7 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
         currency: "USD",
         amount: selectedPlan.amount,
         metadata: {
-          order_id: orderId,
-          aventra_user_id: req.user.id,
-          aventra_plan: plan
+          order_id: orderId
         }
       });
 
