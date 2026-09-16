@@ -2964,7 +2964,6 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
         }
       });
 
-    console.log("SAFE_PAY_SESSION_RESPONSE:", JSON.stringify(response?.data ?? response, null, 2));
     const tracker =
       response?.data?.tracker;
 
@@ -2978,13 +2977,7 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
     const checkoutUrl =
       safepay.checkout.createCheckoutUrl({
         env: "sandbox",
-        tracker: tracker.token,
-        source: "hosted",
-        order_id: orderId,
-        cancel_url:
-          "https://aventra-video-studio.onrender.com/",
-        redirect_url:
-          "https://aventra-video-studio.onrender.com/"
+        tracker: tracker.token
       });
 
     console.log(
