@@ -2964,6 +2964,7 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
         }
       });
 
+    console.log("SAFE_PAY_SESSION_RESPONSE:", JSON.stringify(response?.data ?? response, null, 2));
     const tracker =
       response?.data?.tracker;
 
