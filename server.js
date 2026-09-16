@@ -2973,31 +2973,17 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
       );
     }
 
-    // 2. Get fresh Passport token (TBT)
-    const passport =
-      await safepay.client.passport.create({});
-
-    const tbt = passport?.data;
-
-    if (!tbt) {
-      throw new Error(
-        "Safepay passport token not received"
-      );
-    }
-
-    // 3. Create authenticated checkout URL
+    // 2. Create Safepay hosted checkout URL
     const checkoutUrl =
       safepay.checkout.createCheckoutUrl({
         env: "sandbox",
-        tbt,
         tracker: tracker.token,
         source: "hosted",
         order_id: orderId,
         cancel_url:
           "https://aventra-video-studio.onrender.com/",
         redirect_url:
-          "https://aventra-video-studio.onrender.com/",
-        webhooks: true
+          "https://aventra-video-studio.onrender.com/"
       });
 
     console.log(
