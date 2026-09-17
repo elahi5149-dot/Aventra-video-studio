@@ -2975,7 +2975,7 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
 
     // 2. Create short-lived Safepay authentication token
     const passportResponse =
-      await safepay.client.passport.create();
+      await safepay.auth.passport.create();
 
     const tbt = passportResponse?.data;
     if (!tbt) {
