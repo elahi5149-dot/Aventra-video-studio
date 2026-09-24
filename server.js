@@ -2973,21 +2973,12 @@ app.post("/api/payment/safepay/create", authenticateUser, async (req, res) => {
       );
     }
 
-    // 2. Create short-lived Safepay authentication token
-    const passportResponse =
-      await safepay.client.passport.create({}, { secret: process.env.SAFEPAY_SECRET_KEY });
-
-    const tbt = passportResponse?.data;
-    if (!tbt) {
-      throw new Error("Safepay authentication token not received");
-    }
-
-    // 3. Create Safepay hosted checkout URL
+    // 2. Create Safepay hosted checkout URL
+    // Passport/TBT is not required for this Sandbox checkout flow.
     const checkoutUrl =
       safepay.checkout.createCheckoutUrl({
         env: "sandbox",
         tracker: tracker.token,
-        tbt,
         source: "hosted",
         redirect_url: "https://aventra-video-studio.onrender.com/",
         cancel_url: "https://aventra-video-studio.onrender.com/"
