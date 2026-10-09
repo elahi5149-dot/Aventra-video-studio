@@ -3064,7 +3064,7 @@ if (animationBtn) {
 
     try {
 
-      const response = await fetch(aventraApiUrl("/api/youtube/script"), {
+      const response = await aventraFetch("/api/youtube/script", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -3123,7 +3123,7 @@ if (animationBtn) {
 
       try {
 
-        const response = await fetch(aventraApiUrl("/api/youtube/voice"), {
+        const response = await aventraFetch("/api/youtube/voice", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -3226,7 +3226,7 @@ if (animationBtn) {
 
       try {
 
-        const response = await fetch(
+        const response = await aventraFetch(
           "/api/youtube/scenes",
           {
             method: "POST",
@@ -3322,7 +3322,7 @@ if (animationBtn) {
 
         try {
 
-          const response = await fetch(
+          const response = await aventraFetch(
             "/api/youtube/generate-images",
             {
               method: "POST",
@@ -3451,7 +3451,7 @@ if (animationBtn) {
           const scriptText =
             scriptOutput.value.trim();
 
-          const response = await fetch(
+          const response = await aventraFetch(
             "/api/youtube/create-video",
             {
               method: "POST",
@@ -3586,7 +3586,7 @@ if (animationBtn) {
         "📝 Step 1/4: AI Script تیار ہو رہا ہے...";
 
       const scriptResponse =
-        await fetch(aventraApiUrl("/api/youtube/script"), {
+        await aventraFetch("/api/youtube/script", {
           method: "POST",
           headers: {
             "Content-Type":
@@ -3631,8 +3631,11 @@ if (animationBtn) {
       status.textContent =
         "🎞️ Step 2/4: Visual scenes تیار ہو رہے ہیں...";
 
+      const scenesToken = localStorage.getItem("aventra_token");
+      status.textContent = "Scenes token: " + (scenesToken ? "PRESENT" : "MISSING");
+
       const scenesResponse =
-        await fetch(aventraApiUrl("/api/youtube/scenes"), {
+        await aventraFetch("/api/youtube/scenes", {
           method: "POST",
           headers: {
             "Content-Type":
@@ -3701,7 +3704,7 @@ if (animationBtn) {
         "🖼️ Step 3/4: Scene images تیار ہو رہی ہیں...";
 
       const imagesResponse =
-        await fetch(
+        await aventraFetch(
           "/api/youtube/generate-images",
           {
             method: "POST",
@@ -3736,7 +3739,7 @@ if (animationBtn) {
         "🎬 Step 4/4: Final video اور Urdu AI voice بن رہی ہے...";
 
       const videoResponse =
-        await fetch(
+        await aventraFetch(
           "/api/youtube/create-video",
           {
             method: "POST",
@@ -3836,7 +3839,7 @@ if (animationBtn) {
     link.style.display = "none";
 
     try {
-      const response = await fetch(aventraApiUrl("/api/youtube/thumbnail"), {
+      const response = await aventraFetch("/api/youtube/thumbnail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -3917,7 +3920,7 @@ if (animationBtn) {
     status.textContent = "🔎 AI YouTube SEO تیار کر رہا ہے...";
 
     try {
-      const response = await fetch(aventraApiUrl("/api/youtube/seo"), {
+      const response = await aventraFetch("/api/youtube/seo", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -4174,11 +4177,8 @@ function showLoggedInUser(user) {
   loggedUserPlan.textContent =
     userPlan;
 
-  if (userPlan === "pro" || userPlan === "premium") {
-    unlockVideoStudioFeatures();
-  } else {
-    lockVideoStudioFeatures();
-  }
+  // All logged-in users can use the basic video studio features.
+  unlockVideoStudioFeatures();
 }
 
 function logoutUser() {
@@ -4234,7 +4234,7 @@ if (savedUser && savedToken) {
 // ============================
 // Aventra API Base URL
 // ============================
-const AVENTRA_API_BASE = "https://aventra-video-studio.onrender.com";
+const AVENTRA_API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "" : "https://aventra-video-studio.onrender.com";
 
 function aventraApiUrl(url) {
   if (typeof url === "string" && url.startsWith("/api/")) {
@@ -4322,11 +4322,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.body.classList.remove("auth-locked");
 
-    if (userPlan === "pro" || userPlan === "premium") {
-      unlockVideoStudioFeatures();
-    } else {
-      lockVideoStudioFeatures();
-    }
+    // All logged-in users can use the basic video studio features.
+    unlockVideoStudioFeatures();
 
   } catch (error) {
     console.error("❌ Saved user data error:", error);

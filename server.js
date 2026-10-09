@@ -398,18 +398,10 @@ async function requireActiveSubscription(req, res, next) {
       });
     }
 
-    const userPlan =
-      String(user.plan || "free").toLowerCase();
-
-    if (userPlan !== "pro" && userPlan !== "premium") {
-      return res.status(403).json({
-        success: false,
-        message: "Active subscription required"
-      });
-    }
+    // All logged-in users have full access.
 
     req.currentUser = user;
-    req.userPlan = userPlan;
+    req.userPlan = String(user.plan || "free").toLowerCase();
 
     next();
 
