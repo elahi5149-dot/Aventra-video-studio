@@ -11,6 +11,106 @@ const { execFile, spawnSync } = require("child_process");
 
 const app = express();
 
+async function generateHordeImage(prompt) {
+  const base = "https://aihorde.net/api/v2";
+  const headers = {
+    "apikey": "0000000000",
+    "Client-Agent": "AventraVideoStudio:1.0:github.com/elahi5149-dot/Aventra-video-studio",
+    "Content-Type": "application/json"
+  };
+
+  const submit = await fetch(`${base}/generate/async`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      prompt,
+      params: {
+        width: 768,
+        height: 512,
+        steps: 20,
+        n: 1,
+        cfg_scale: 7,
+        sampler_name: "k_euler"
+      },
+      models: ["AlbedoBase XL (SDXL)"],
+      nsfw: false,
+      censor_nsfw: true,
+      r2: true
+    })
+  });
+
+  const submitText = await submit.text();
+  if (!submit.ok) {
+    throw new Error(`AI Horde submit HTTP ${submit.status}: ${submitText.slice(0, 250)}`);
+  }
+
+  let job;
+  try {
+    job = JSON.parse(submitText);
+  } catch {
+    throw new Error("AI Horde returned invalid JSON");
+  }
+
+  if (!job.id) {
+    throw new Error("AI Horde did not return a generation ID");
+  }
+
+  const deadline = Date.now() + 150000;
+
+  while (Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 4000));
+
+    const checkRes = await fetch(`${base}/generate/check/${job.id}`, {
+      headers
+    });
+
+    if (!checkRes.ok) {
+      throw new Error(`AI Horde status HTTP ${checkRes.status}`);
+    }
+
+    const check = await checkRes.json();
+
+    if (Number(check.finished || 0) >= 1 || check.done === true) {
+      const resultRes = await fetch(`${base}/generate/status/${job.id}`, {
+        headers
+      });
+
+      if (!resultRes.ok) {
+        throw new Error(`AI Horde result HTTP ${resultRes.status}`);
+      }
+
+      const result = await resultRes.json();
+      const img = result.generations?.[0]?.img;
+
+      if (!img) {
+        throw new Error("AI Horde finished without returning an image");
+      }
+
+      if (img.startsWith("data:")) {
+        const encoded = img.split(",")[1];
+        if (!encoded) throw new Error("Invalid image data from AI Horde");
+        return Buffer.from(encoded, "base64");
+      }
+
+      const imageRes = await fetch(img);
+      if (!imageRes.ok) {
+        throw new Error(`AI Horde image download HTTP ${imageRes.status}`);
+      }
+
+      const buffer = Buffer.from(await imageRes.arrayBuffer());
+      if (!buffer.length) throw new Error("AI Horde returned an empty image");
+      return buffer;
+    }
+
+    if (Number(check.faulted || 0) > 0) {
+      throw new Error("AI Horde image generation failed on its workers");
+    }
+  }
+
+  throw new Error("AI Horde queue timed out after 150 seconds; try again later");
+}
+
+
 app.use(cors({
   origin: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -2244,14 +2344,8 @@ app.post("/api/youtube/generate-images", authenticateUser, requireActiveSubscrip
             `🖼️ Generating YouTube scene ${sceneNumber} (attempt ${attempt}/3)`
           );
 
-          const response = await fetch(imageUrl);
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-
-          imageBuffer = Buffer.from(
-            await response.arrayBuffer()
+          imageBuffer = await generateHordeImage(
+            String(scene.prompt).trim()
           );
 
           if (!imageBuffer.length) {
