@@ -3287,6 +3287,52 @@ if (animationBtn) {
 
 
   // ----------------------------
+
+  async function generateYouTubeSceneImagesWithProgress(scenes, onProgress) {
+    const startResponse = await aventraFetch("/api/youtube/generate-images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scenes })
+    });
+
+    const startData = await startResponse.json();
+    if (!startResponse.ok || !startData.success || !startData.jobId) {
+      throw new Error(startData.message || "Could not start image generation");
+    }
+
+    const jobId = startData.jobId;
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      const response = await aventraFetch(
+        "/api/youtube/image-jobs/" + encodeURIComponent(jobId)
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Could not check image generation progress");
+      }
+
+      if (typeof onProgress === "function") {
+        onProgress(data);
+      }
+
+      if (data.status === "completed") {
+        if (!data.images || data.images.length === 0) {
+          const reason = data.failed && data.failed[0]
+            ? data.failed[0].message
+            : "No images were generated";
+          throw new Error(reason);
+        }
+        return data;
+      }
+
+      if (data.status === "failed") {
+        throw new Error(data.message || "Image generation failed");
+      }
+    }
+  }
+
   // Generate Images
   // ----------------------------
   if (imagesBtn) {
@@ -3322,35 +3368,16 @@ if (animationBtn) {
 
         try {
 
-          const response = await aventraFetch(
-            "/api/youtube/generate-images",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-              body: JSON.stringify({
-                scenes: youtubeScenes
-              })
+          const data = await generateYouTubeSceneImagesWithProgress(
+            youtubeScenes,
+            progress => {
+              imagesStatus.textContent =
+                `⏳ تصاویر تیار ہو رہی ہیں: ${progress.completed}/${progress.total}` +
+                (progress.failed?.length ? ` | ناکام: ${progress.failed.length}` : "");
             }
           );
 
-          const data =
-            await response.json();
-
-          if (
-            !response.ok ||
-            !data.success
-          ) {
-            throw new Error(
-              data.message ||
-              "Image generation failed"
-            );
-          }
-
-          const images =
-            data.images || [];
+          const images = data.images || [];
 
           images.forEach(function (item) {
 
@@ -3386,8 +3413,9 @@ if (animationBtn) {
             );
           });
 
-          imagesStatus.textContent =
-            `✅ ${images.length} scene images تیار ہیں۔`;
+          imagesStatus.textContent = data.failed?.length
+            ? `⚠️ ${images.length} تصاویر تیار؛ ${data.failed.length} ناکام۔ ناکام scenes دوبارہ چلائیں۔`
+            : `✅ ${images.length} scene images تیار ہیں۔`;
 
         } catch (error) {
 
@@ -3703,33 +3731,23 @@ if (animationBtn) {
       status.textContent =
         "🖼️ Step 3/4: Scene images تیار ہو رہی ہیں...";
 
-      const imagesResponse =
-        await aventraFetch(
-          "/api/youtube/generate-images",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-            body: JSON.stringify({
-              scenes: scenes
-            })
-          }
-        );
+      const imagesData = await generateYouTubeSceneImagesWithProgress(
+        scenes,
+        progress => {
+          status.textContent =
+            `🖼️ Step 3/4: تصاویر ${progress.completed}/${progress.total} تیار ہیں...` +
+            (progress.failed?.length ? ` ناکام: ${progress.failed.length}` : "");
+        }
+      );
 
-      const imagesData =
-        await imagesResponse.json();
-
-      if (
-        !imagesResponse.ok ||
-        !imagesData.success
-      ) {
+      if (imagesData.failed?.length) {
+        const failedNumbers = imagesData.failed.map(item => item.scene).join(", ");
         throw new Error(
-          imagesData.message ||
-          "Image generation failed"
+          `کچھ scene images نہیں بنیں (${failedNumbers})۔ پہلے Generate Scene Images سے ناکام تصاویر دوبارہ بنائیں۔`
         );
       }
+
+
 
 
       // ----------------------------

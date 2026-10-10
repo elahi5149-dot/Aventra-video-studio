@@ -11,6 +11,8 @@ const { execFile, spawnSync } = require("child_process");
 
 const app = express();
 
+const youtubeImageJobs = new Map();
+
 async function generateHordeImage(prompt) {
   const base = "https://aihorde.net/api/v2";
   const headers = {
@@ -2452,7 +2454,131 @@ app.post("/api/youtube/generate-images", authenticateUser, requireActiveSubscrip
   }
 });
 // ============================
+
 // ============================
+// YouTube Automation - Background Scene Image Jobs
+// ============================
+app.post("/api/youtube/generate-images", authenticateUser, requireActiveSubscription, async (req, res) => {
+  const { scenes } = req.body || {};
+
+  if (!Array.isArray(scenes) || scenes.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Scenes array is required"
+    });
+  }
+
+  const safeScenes = scenes.slice(0, 50).filter(scene => scene && scene.prompt);
+  if (safeScenes.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "No scenes with prompts were provided"
+    });
+  }
+
+  const jobId = require("crypto").randomUUID();
+  const job = {
+    id: jobId,
+    status: "running",
+    total: safeScenes.length,
+    completed: 0,
+    images: [],
+    failed: [],
+    createdAt: Date.now()
+  };
+
+  youtubeImageJobs.set(jobId, job);
+
+  // Return immediately; image generation continues in the background.
+  res.status(202).json({ success: true, jobId, total: job.total });
+
+  setImmediate(async () => {
+    try {
+      const sceneDir = path.join(outputDir, "youtube-scenes");
+      fs.mkdirSync(sceneDir, { recursive: true });
+
+      for (let index = 0; index < safeScenes.length; index++) {
+        const scene = safeScenes[index];
+        const sceneNumber = parseInt(scene.scene, 10) || index + 1;
+        let imageBuffer = null;
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            console.log(`🖼️ Job ${jobId}: scene ${sceneNumber}, attempt ${attempt}/3`);
+            imageBuffer = await generateHordeImage(String(scene.prompt).trim());
+
+            if (!imageBuffer || imageBuffer.length === 0) {
+              throw new Error("Empty image response");
+            }
+            break;
+          } catch (error) {
+            lastError = error;
+            console.error(`⚠️ Job ${jobId}, scene ${sceneNumber}: ${error.message}`);
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+          }
+        }
+
+        if (imageBuffer && imageBuffer.length) {
+          const filename = `scene-${sceneNumber}.jpg`;
+          fs.writeFileSync(path.join(sceneDir, filename), imageBuffer);
+
+          job.images.push({
+            scene: sceneNumber,
+            summary: scene.summary || "",
+            prompt: scene.prompt,
+            duration: Number(scene.duration) || 8,
+            imageUrl: `/outputs/youtube-scenes/${filename}`
+          });
+          console.log(`✅ Job ${jobId}: scene ${sceneNumber} saved`);
+        } else {
+          job.failed.push({
+            scene: sceneNumber,
+            message: lastError?.message || "Image generation failed"
+          });
+        }
+
+        job.completed = index + 1;
+      }
+
+      job.images.sort((a, b) => a.scene - b.scene);
+      job.status = "completed";
+      job.finishedAt = Date.now();
+      console.log(`✅ Image job ${jobId} finished: ${job.images.length}/${job.total} images`);
+    } catch (error) {
+      job.status = "failed";
+      job.message = error?.message || "Scene image generation failed";
+      job.finishedAt = Date.now();
+      console.error(`❌ Image job ${jobId} failed:`, error);
+    }
+  });
+});
+
+app.get("/api/youtube/image-jobs/:jobId", authenticateUser, requireActiveSubscription, (req, res) => {
+  const job = youtubeImageJobs.get(req.params.jobId);
+
+  if (!job || Date.now() - job.createdAt > 60 * 60 * 1000) {
+    if (job) youtubeImageJobs.delete(req.params.jobId);
+    return res.status(404).json({
+      success: false,
+      message: "Image job not found or expired. Please start again."
+    });
+  }
+
+  res.json({
+    success: job.status !== "failed",
+    jobId: job.id,
+    status: job.status,
+    total: job.total,
+    completed: job.completed,
+    images: job.images,
+    failed: job.failed,
+    message: job.message || ""
+  });
+});
+
 // YouTube Automation - Create Video from Scene Images
 // ============================
 app.post("/api/youtube/create-video", authenticateUser, requireActiveSubscription, async (req, res) => {
