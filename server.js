@@ -200,45 +200,72 @@ app.post("/api/auth/signup", async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    if (String(password).length < 6) {
       return res.status(400).json({
         success: false,
         message: "Password must be at least 6 characters"
       });
     }
 
+    const cleanName = String(name).trim();
     const cleanEmail = String(email).trim().toLowerCase();
-
-    const users = loadUsers();
-
-    const existingUser = users.find(
-      user => user.email === cleanEmail
-    );
-
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email is already registered"
-      });
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = {
-      id: Date.now().toString(),
-      name: String(name).trim(),
-      email: cleanEmail,
-      password: hashedPassword,
-      plan: "free",
-      createdAt: new Date().toISOString()
-    };
+    let user;
 
-    users.push(user);
-    saveUsers(users);
+    if (pool) {
+      const existing = await pool.query(
+        "SELECT id FROM users WHERE email = $1",
+        [cleanEmail]
+      );
+
+      if (existing.rows.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: "Email is already registered"
+        });
+      }
+
+      const id = Date.now().toString();
+
+      const result = await pool.query(
+        `INSERT INTO users (id, name, email, password, plan, created_at)
+         VALUES ($1, $2, $3, $4, 'free', NOW())
+         RETURNING id, name, email, plan`,
+        [id, cleanName, cleanEmail, hashedPassword]
+      );
+
+      user = result.rows[0];
+    } else {
+      const users = loadUsers();
+
+      const existingUser = users.find(
+        item => item.email === cleanEmail
+      );
+
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          message: "Email is already registered"
+        });
+      }
+
+      user = {
+        id: Date.now().toString(),
+        name: cleanName,
+        email: cleanEmail,
+        password: hashedPassword,
+        plan: "free",
+        createdAt: new Date().toISOString()
+      };
+
+      users.push(user);
+      saveUsers(users);
+    }
 
     const token = createToken(user);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Account created successfully",
       token,
@@ -252,6 +279,13 @@ app.post("/api/auth/signup", async (req, res) => {
 
   } catch (error) {
     console.error("Signup error:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "Email is already registered"
+      });
+    }
 
     res.status(500).json({
       success: false,
