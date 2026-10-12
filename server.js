@@ -2907,35 +2907,70 @@ app.post("/api/youtube/create-video", authenticateUser, requireActiveSubscriptio
       "🎙️ Generating Urdu AI voice..."
     );
 
-    const voiceProcess = spawnSync(
+    let voiceProcess = spawnSync(
       "python",
       [
         "-m",
         "edge_tts",
-        "--voice",
-        safeVoice,
-        "--text",
-        text,
-        "--write-media",
-        voicePath
+        "--voice", safeVoice,
+        "--text", text,
+        "--write-media", voicePath
       ],
       {
-        encoding: "utf8"
+        encoding: "utf8",
+        timeout: 120000,
+        maxBuffer: 1024 * 1024
       }
     );
 
     if (
       voiceProcess.status !== 0 ||
-      !fs.existsSync(voicePath)
+      !fs.existsSync(voicePath) ||
+      fs.statSync(voicePath).size === 0
     ) {
       console.error(
         "Edge TTS error:",
-        voiceProcess.stderr
+        voiceProcess.error?.message || voiceProcess.stderr || "No audio produced"
       );
 
-      throw new Error(
-        "Voice generation failed"
+      try {
+        if (fs.existsSync(voicePath)) {
+          fs.unlinkSync(voicePath);
+        }
+      } catch (_) {}
+
+      console.log("Trying gTTS fallback...");
+
+      const language = safeVoice.startsWith("en-") ? "en" : "ur";
+
+      const fallbackProcess = spawnSync(
+        "python",
+        [
+          path.join(__dirname, "gtts_fallback.py"),
+          language,
+          text,
+          voicePath
+        ],
+        {
+          encoding: "utf8",
+          timeout: 120000,
+          maxBuffer: 1024 * 1024
+        }
       );
+
+      if (
+        fallbackProcess.status !== 0 ||
+        !fs.existsSync(voicePath) ||
+        fs.statSync(voicePath).size === 0
+      ) {
+        console.error(
+          "gTTS fallback error:",
+          fallbackProcess.error?.message || fallbackProcess.stderr || "No audio produced"
+        );
+        throw new Error("Both Edge TTS and gTTS voice generation failed");
+      }
+
+      console.log("gTTS fallback succeeded");
     }
 
     /*
