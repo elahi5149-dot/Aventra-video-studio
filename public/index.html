@@ -585,6 +585,89 @@ body.auth-locked .feature-nav {
   </a>
 
 
+
+  <!-- Aventra AI Drama Studio -->
+  <div class="card" id="dramaStudioCard" style="margin-top:20px;padding:18px;">
+    <h2>🎬 Aventra AI Drama Studio</h2>
+    <p>Create a Pakistani drama or Hollywood-style action story.</p>
+    <label for="dramaGenre">Drama Style</label>
+    <select id="dramaGenre" style="width:100%;margin:8px 0;padding:10px;">
+      <option value="Pakistani Drama">🇵🇰 Pakistani Drama</option>
+      <option value="Hollywood Action">🎥 Hollywood Action</option>
+    </select>
+    <label for="dramaTopic">Story Topic</label>
+    <textarea id="dramaTopic" rows="3" placeholder="مثلاً دو بھائیوں کی جذباتی کہانی یا ایک ہیرو کا مشن..." style="width:100%;margin:8px 0;padding:10px;box-sizing:border-box;"></textarea>
+    <label for="dramaLanguage">Dialogue Language</label>
+    <select id="dramaLanguage" style="width:100%;margin:8px 0;padding:10px;">
+      <option value="Urdu">اردو</option>
+      <option value="English">English</option>
+      <option value="Arabic">العربية</option>
+    </select>
+    <label for="dramaDuration">Duration</label>
+    <select id="dramaDuration" style="width:100%;margin:8px 0;padding:10px;">
+      <option value="1">1 minute — Test</option>
+      <option value="2">2 minutes</option>
+      <option value="3">3 minutes</option>
+      <option value="5">5 minutes</option>
+    </select>
+    <label for="dramaCharacters">Number of Characters</label>
+    <select id="dramaCharacters" style="width:100%;margin:8px 0;padding:10px;">
+      <option value="2">2 Characters</option>
+      <option value="3">3 Characters</option>
+      <option value="4">4 Characters</option>
+    </select>
+    <button type="button" id="generateDramaBtn" style="width:100%;margin-top:12px;padding:12px;">✨ Generate Drama Script</button>
+    <div id="dramaStatus" role="status" style="margin-top:12px;"></div>
+    <textarea id="dramaOutput" rows="14" readonly placeholder="Your AI drama script will appear here..." style="width:100%;margin-top:12px;padding:10px;box-sizing:border-box;"></textarea>
+    <button type="button" id="copyDramaBtn" style="width:100%;padding:10px;">📋 Copy Script</button>
+  </div>
+
+
+  <!-- Aventra AI Character Studio -->
+  <div class="card" id="characterStudioCard" style="margin-top:20px;padding:18px;">
+    <h2>🎭 AI Character Studio</h2>
+    <p>اپنے ڈرامے کے کردار کی تصویر بنائیں۔</p>
+
+    <label for="characterName">Character Name / کردار کا نام</label>
+    <input id="characterName" maxlength="80" placeholder="مثلاً احمد"
+      style="width:100%;padding:12px;margin:8px 0;box-sizing:border-box;">
+
+    <label for="characterAge">Age / عمر</label>
+    <input id="characterAge" maxlength="30" placeholder="مثلاً 28 years old"
+      style="width:100%;padding:12px;margin:8px 0;box-sizing:border-box;">
+
+    <label for="characterGenre">Drama Style</label>
+    <select id="characterGenre" style="width:100%;padding:12px;margin:8px 0;">
+      <option value="Pakistani Drama">🇵🇰 Pakistani Drama</option>
+      <option value="Hollywood Action">🎬 Hollywood Action</option>
+    </select>
+
+    <label for="characterAppearance">Appearance / شکل و حلیہ</label>
+    <textarea id="characterAppearance" rows="3" maxlength="500"
+      placeholder="مثلاً black hair, brown eyes, short beard"
+      style="width:100%;padding:12px;margin:8px 0;box-sizing:border-box;"></textarea>
+
+    <label for="characterClothing">Clothing / لباس</label>
+    <textarea id="characterClothing" rows="2" maxlength="300"
+      placeholder="مثلاً سفید شلوار قمیض اور بھوری واسکٹ"
+      style="width:100%;padding:12px;margin:8px 0;box-sizing:border-box;"></textarea>
+
+    <button type="button" id="generateCharacterBtn"
+      style="width:100%;padding:14px;margin-top:10px;">
+      🎨 Generate Character Image
+    </button>
+
+    <div id="characterStatus" role="status" style="margin-top:12px;"></div>
+
+    <img id="characterPreview" alt="AI Character Preview"
+      style="display:none;width:100%;margin-top:14px;border-radius:10px;">
+
+    <a id="characterDownload" href="#" download="aventra-character.jpg"
+      style="display:none;margin-top:12px;">⬇️ Download Character Image</a>
+  </div>
+
+  <div class="card" id="characterGalleryCard" style="margin-top:20px;padding:18px"><h2>🖼️ محفوظ کردار</h2><p>اپنے کردار دوبارہ استعمال کریں یا حذف کریں۔</p><button id="reloadCharactersBtn" type="button">🔄 کردار دوبارہ لوڈ کریں</button><div id="characterGalleryStatus" style="margin:12px 0"></div><div id="characterGallery" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px"></div></div>
+  <div class="card" id="dialogueVoiceStudio" style="margin-top:20px;padding:18px"><h2>🎙️ AI Dialogue Voice Studio</h2><p>ڈرامے کا مکالمہ لکھیں، آواز بنائیں اور MP3 محفوظ کریں۔</p><label for="dialogueVoiceText">مکالمہ / Dialogue</label><textarea id="dialogueVoiceText" maxlength="5000" placeholder="یہاں اپنا مکالمہ لکھیں..." style="width:100%;min-height:150px;padding:12px;margin-top:8px;box-sizing:border-box"></textarea><label for="dialogueVoiceSelect" style="display:block;margin-top:12px">آواز منتخب کریں</label><select id="dialogueVoiceSelect" style="width:100%;padding:12px"><option value="ur-PK-UzmaNeural">اردو — خاتون</option><option value="ur-PK-AsadNeural">اردو — مرد</option><option value="en-US-AriaNeural">English — Female</option><option value="en-US-GuyNeural">English — Male</option></select><button id="generateDialogueVoiceBtn" type="button" style="width:100%;padding:13px;margin-top:14px">🔊 آواز تیار کریں</button><div id="dialogueVoiceStatus" role="status" style="margin:12px 0"></div><audio id="dialogueVoicePlayer" controls style="display:none;width:100%;margin-top:10px"></audio><a id="dialogueVoiceDownload" download="aventra-dialogue.mp3" style="display:none;margin-top:12px">⬇️ MP3 ڈاؤن لوڈ کریں</a></div>
   <!-- YouTube Thumbnail Generator -->
   <div class="card" id="youtubeThumbnailSection"
        style="margin-top:20px;">
@@ -4269,7 +4352,7 @@ function aventraApiUrl(url) {
 // Aventra Authenticated API Helper
 // ============================
 
-async function aventraFetch(url, options = {}) {
+window.aventraFetch = async function aventraFetch(url, options = {}) {
   const token = localStorage.getItem("aventra_token");
 
   if (!token) {
@@ -4609,5 +4692,129 @@ async function startSafepayCheckout(button, plan) {
 }
 </script>
 
+
+<script id="dramaButtonHandler">
+(() => {
+  const $ = id => document.getElementById(id);
+  $('generateDramaBtn').addEventListener('click', async () => {
+    const topic = $('dramaTopic').value.trim();
+    const status = $('dramaStatus');
+    const btn = $('generateDramaBtn');
+    if (!topic) {
+      status.textContent = '⚠️ پہلے کہانی کا موضوع لکھیں۔';
+      return;
+    }
+    btn.disabled = true;
+    status.textContent = '⏳ AI اسکرپٹ تیار کر رہا ہے...';
+    $('dramaOutput').value = '';
+    try {
+      const response = await aventraFetch('/api/drama/script', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          topic,
+          genre: $('dramaGenre').value,
+          language: $('dramaLanguage').value,
+          duration: Number($('dramaDuration').value),
+          characters: Number($('dramaCharacters').value)
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'اسکرپٹ تیار نہیں ہوا۔');
+      }
+      $('dramaOutput').value = typeof data.script === 'string'
+        ? data.script : JSON.stringify(data.script, null, 2);
+      status.textContent = '✅ ڈرامے کا اسکرپٹ تیار ہے!';
+    } catch (e) {
+      status.textContent = '❌ ' + e.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  $('copyDramaBtn').addEventListener('click', async () => {
+    const output = $('dramaOutput');
+    const status = $('dramaStatus');
+    if (!output.value) {
+      status.textContent = '⚠️ پہلے اسکرپٹ تیار کریں۔';
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(output.value);
+      status.textContent = '✅ اسکرپٹ کاپی ہوگیا!';
+    } catch (e) {
+      output.focus();
+      output.select();
+      status.textContent = 'اسکرپٹ منتخب ہے؛ اسے Copy کریں۔';
+    }
+  });
+})();
+</script>
+\n
+<script id="characterStudioHandler">
+(() => {
+  const $ = id => document.getElementById(id);
+  const button = $('generateCharacterBtn');
+  if (!button) return;
+
+  button.addEventListener('click', async () => {
+    const status = $('characterStatus');
+    const preview = $('characterPreview');
+    const download = $('characterDownload');
+
+    const payload = {
+      name: $('characterName').value.trim(),
+      age: $('characterAge').value.trim(),
+      genre: $('characterGenre').value,
+      appearance: $('characterAppearance').value.trim(),
+      clothing: $('characterClothing').value.trim()
+    };
+
+    if (!payload.name || !payload.age || !payload.appearance || !payload.clothing) {
+      status.textContent = '⚠️ براہ کرم تمام معلومات درج کریں۔';
+      return;
+    }
+
+    button.disabled = true;
+    preview.style.display = 'none';
+    download.style.display = 'none';
+    status.textContent = '⏳ کردار کی تصویر بن رہی ہے؛ اس میں کچھ وقت لگ سکتا ہے۔';
+
+    try {
+      const response = await aventraFetch('/api/drama/character-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'تصویر نہیں بن سکی۔');
+      }
+
+      preview.onload = () => {
+        preview.style.display = 'block';
+        status.textContent = '✅ کردار کی تصویر تیار ہے!';
+      };
+      preview.onerror = () => {
+        status.textContent = '❌ تصویر بن گئی، لیکن اسے دکھایا نہیں جا سکا۔';
+      };
+      preview.src = data.imageUrl + '?t=' + Date.now();
+
+      download.href = data.imageUrl;
+      download.style.display = 'inline-block';
+    } catch (error) {
+      status.textContent = '❌ ' + error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+})();
+</script>
+
+<script id="savedCharacterGalleryHandler">(()=>{const $=id=>document.getElementById(id),g=$("characterGallery"),st=$("characterGalleryStatus"),b=$("reloadCharactersBtn");if(!g||!st||!b)return;async function load(){b.disabled=true;st.textContent="⏳ کردار لوڈ ہو رہے ہیں...";g.replaceChildren();try{const r=await aventraFetch("/api/drama/characters"),d=await r.json();if(!r.ok||!d.success)throw Error(d.message||"کردار لوڈ نہیں ہوئے");if(!d.characters?.length){st.textContent="ابھی کوئی محفوظ کردار نہیں۔ پہلے کردار کی تصویر بنائیں۔";return}st.textContent="✅ محفوظ کردار: "+d.characters.length;for(const c of d.characters){const a=document.createElement("article");a.style.cssText="padding:10px;border:1px solid #596078;border-radius:10px;overflow-wrap:anywhere";const im=document.createElement("img");im.src=c.image_url;im.alt=c.name;im.style.cssText="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:7px";const h=document.createElement("h3");h.textContent=c.name;const p=document.createElement("p");p.textContent=(c.age||"")+" · "+(c.genre||"");const use=document.createElement("button");use.textContent="♻️ دوبارہ استعمال";use.onclick=()=>{[["characterName",c.name],["characterAge",c.age],["characterGenre",c.genre],["characterAppearance",c.appearance],["characterClothing",c.clothing]].forEach(([id,v])=>{if($(id))$(id).value=v||""});$("characterStudioCard")?.scrollIntoView({behavior:"smooth"});if($("characterStatus"))$("characterStatus").textContent="✅ کردار کی معلومات لوڈ ہوگئیں۔"};const del=document.createElement("button");del.textContent="🗑️ حذف کریں";del.style.marginTop="6px";del.onclick=async()=>{if(!confirm("کیا یہ کردار حذف کرنا ہے؟"))return;del.disabled=true;try{const x=await aventraFetch("/api/drama/characters/"+encodeURIComponent(c.id),{method:"DELETE"}),y=await x.json();if(!x.ok||!y.success)throw Error(y.message||"حذف نہیں ہوا");await load()}catch(e){st.textContent="❌ "+e.message;del.disabled=false}};a.append(im,h,p,use,del);g.append(a)}}catch(e){st.textContent="❌ "+e.message}finally{b.disabled=false}}b.onclick=load;load()})();</script>
+<script id="dialogueVoiceStudioHandler">(()=>{const $=id=>document.getElementById(id),b=$("generateDialogueVoiceBtn");if(!b)return;b.addEventListener("click",async()=>{const text=$("dialogueVoiceText").value.trim(),voice=$("dialogueVoiceSelect").value,st=$("dialogueVoiceStatus"),a=$("dialogueVoicePlayer"),dl=$("dialogueVoiceDownload");if(!text){st.textContent="⚠️ پہلے مکالمہ لکھیں۔";return}b.disabled=true;a.style.display="none";dl.style.display="none";st.textContent="⏳ آواز تیار ہو رہی ہے، انتظار کریں...";try{const r=await aventraFetch("/api/youtube/voice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,voice})}),d=await r.json();if(!r.ok||!d.success)throw Error(d.message||"آواز تیار نہیں ہوئی");const base=(typeof AVENTRA_API_BASE!=="undefined"&&AVENTRA_API_BASE)?AVENTRA_API_BASE:location.origin,url=new URL(d.audioUrl,base).href;a.src=url;a.style.display="block";dl.href=url;dl.style.display="inline-block";st.textContent="✅ آواز تیار ہے! نیچے Play دبائیں یا MP3 ڈاؤن لوڈ کریں۔"}catch(e){st.textContent="❌ "+e.message}finally{b.disabled=false}})})();</script>
+<script src="/scene-builder.js"></script>
+<script src="/scene-builder-video.js"></script>
 </body>
 </html>

@@ -14,104 +14,53 @@ const app = express();
 const youtubeImageJobs = new Map();
 
 async function generateHordeImage(prompt) {
-  const base = "https://aihorde.net/api/v2";
-  const headers = {
-    "apikey": "0000000000",
-    "Client-Agent": "AventraVideoStudio:1.0:github.com/elahi5149-dot/Aventra-video-studio",
-    "Content-Type": "application/json"
-  };
-
-  const submit = await fetch(`${base}/generate/async`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      prompt,
-      params: {
-        width: 768,
-        height: 512,
-        steps: 20,
-        n: 1,
-        cfg_scale: 7,
-        sampler_name: "k_euler"
-      },
-      models: ["AlbedoBase XL (SDXL)"],
-      nsfw: false,
-      censor_nsfw: true,
-      r2: true
-    })
-  });
-
-  const submitText = await submit.text();
-  if (!submit.ok) {
-    throw new Error(`AI Horde submit HTTP ${submit.status}: ${submitText.slice(0, 250)}`);
+  if (!prompt || !String(prompt).trim()) {
+    throw new Error("Image prompt is required");
   }
 
-  let job;
+  const encodedPrompt = encodeURIComponent(
+    String(prompt).trim() + ", cinematic composition, detailed, high quality"
+  );
+
+  const imageUrl =
+    `https://image.pollinations.ai/prompt/${encodedPrompt}` +
+    `?width=1280&height=720&nologo=true`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000);
+
   try {
-    job = JSON.parse(submitText);
-  } catch {
-    throw new Error("AI Horde returned invalid JSON");
-  }
-
-  if (!job.id) {
-    throw new Error("AI Horde did not return a generation ID");
-  }
-
-  const deadline = Date.now() + 150000;
-
-  while (Date.now() < deadline) {
-    await new Promise(resolve => setTimeout(resolve, 4000));
-
-    const checkRes = await fetch(`${base}/generate/check/${job.id}`, {
-      headers
+    const response = await fetch(imageUrl, {
+      method: "GET",
+      headers: { "Accept": "image/*" },
+      signal: controller.signal
     });
 
-    if (!checkRes.ok) {
-      throw new Error(`AI Horde status HTTP ${checkRes.status}`);
+    if (!response.ok) {
+      throw new Error(`Pollinations image HTTP ${response.status}`);
     }
 
-    const check = await checkRes.json();
-
-    if (Number(check.finished || 0) >= 1 || check.done === true) {
-      const resultRes = await fetch(`${base}/generate/status/${job.id}`, {
-        headers
-      });
-
-      if (!resultRes.ok) {
-        throw new Error(`AI Horde result HTTP ${resultRes.status}`);
-      }
-
-      const result = await resultRes.json();
-      const img = result.generations?.[0]?.img;
-
-      if (!img) {
-        throw new Error("AI Horde finished without returning an image");
-      }
-
-      if (img.startsWith("data:")) {
-        const encoded = img.split(",")[1];
-        if (!encoded) throw new Error("Invalid image data from AI Horde");
-        return Buffer.from(encoded, "base64");
-      }
-
-      const imageRes = await fetch(img);
-      if (!imageRes.ok) {
-        throw new Error(`AI Horde image download HTTP ${imageRes.status}`);
-      }
-
-      const buffer = Buffer.from(await imageRes.arrayBuffer());
-      if (!buffer.length) throw new Error("AI Horde returned an empty image");
-      return buffer;
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.startsWith("image/")) {
+      throw new Error(`Pollinations returned unexpected content type: ${contentType}`);
     }
 
-    if (Number(check.faulted || 0) > 0) {
-      throw new Error("AI Horde image generation failed on its workers");
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    if (!buffer.length) {
+      throw new Error("Pollinations returned an empty image");
     }
+
+    return buffer;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("Pollinations image generation timed out");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  throw new Error("AI Horde queue timed out after 150 seconds; try again later");
 }
-
 
 app.use(cors({
   origin: true,
@@ -156,13 +105,63 @@ async function initDatabase() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
-  console.log("✅ PostgreSQL users table ready");
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS drama_characters (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      age TEXT NOT NULL,
+      appearance TEXT NOT NULL,
+      clothing TEXT NOT NULL,
+      genre TEXT DEFAULT 'Pakistani Drama',
+      image_url TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
+  console.log("✅ PostgreSQL users and drama characters tables ready");
 }
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const usersFile = path.join(__dirname, "users.json");
+
+const dramaCharactersFile = path.join(__dirname, "drama-characters.json");
+
+function loadDramaCharacters() {
+  try {
+    if (!fs.existsSync(dramaCharactersFile)) {
+      fs.writeFileSync(dramaCharactersFile, "[]");
+    }
+    return JSON.parse(fs.readFileSync(dramaCharactersFile, "utf8"));
+  } catch (error) {
+    console.error("Drama characters file error:", error);
+    return [];
+  }
+}
+
+async function saveDramaCharacter(character) {
+  if (pool) {
+    await pool.query(
+      `INSERT INTO drama_characters
+       (id, user_id, name, age, appearance, clothing, genre, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        character.id, character.user_id, character.name, character.age,
+        character.appearance, character.clothing, character.genre,
+        character.image_url
+      ]
+    );
+  } else {
+    const characters = loadDramaCharacters();
+    characters.unshift(character);
+    fs.writeFileSync(dramaCharactersFile, JSON.stringify(characters, null, 2));
+  }
+}
+
+
 
 function loadUsers() {
   try {
@@ -652,7 +651,9 @@ app.post("/api/youtube/voice", authenticateUser, requireActiveSubscription, asyn
 
     const safeVoice = [
       "ur-PK-UzmaNeural",
-      "ur-PK-AsadNeural"
+      "ur-PK-AsadNeural",
+      "en-US-AriaNeural",
+      "en-US-GuyNeural"
     ].includes(voice) ? voice : "ur-PK-UzmaNeural";
 
     const filename = `youtube_voice_${Date.now()}.mp3`;
@@ -787,6 +788,154 @@ Requirements:
   }
 });
 
+
+
+app.post("/api/drama/script", authenticateUser, requireActiveSubscription, async (req, res) => {
+  try {
+    const { topic, genre = "Pakistani Drama", language = "Urdu", duration = 1, characters = 2 } = req.body || {};
+    if (typeof topic !== "string" || !topic.trim()) {
+      return res.status(400).json({ success: false, message: "Please enter a story idea." });
+    }
+    const kind = ["Pakistani Drama", "Hollywood Action"].includes(genre) ? genre : "Pakistani Drama";
+    const lang = ["Urdu", "English", "Arabic"].includes(language) ? language : "Urdu";
+    const mins = Math.min(5, Math.max(1, Number(duration) || 1));
+    const cast = Math.min(4, Math.max(2, Number(characters) || 2));
+    const prompt = [
+      "Write a cinematic drama screenplay in " + lang + ".",
+      "Genre: " + kind,
+      "Story idea: " + topic.trim().slice(0, 1500),
+      "Duration: " + mins + " minutes. Main characters: " + cast + ".",
+      "Include TITLE, STORY SUMMARY, CHARACTER BIBLE, SCENES, VISUAL CONTINUITY RULES.",
+      "For each character describe age, appearance, clothing, personality and voice.",
+      "For every scene provide location, action, camera direction, emotions, speaker-named dialogue, sound and an English cinematic VIDEO GENERATION PROMPT.",
+      "Keep character appearance and clothing consistent between scenes.",
+      "Pakistani Drama should have natural emotional dialogue; Hollywood Action should have cinematic fictional adventure.",
+      "Return readable text, not JSON. Do not claim a video has been generated."
+    ].join("\n");
+    const result = await groq.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      messages: [
+        { role: "system", content: "You are a professional film screenwriter and cinematic scene planner." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.75,
+      max_tokens: 6000
+    });
+    const script = result.choices?.[0]?.message?.content || "";
+    if (!script.trim()) throw new Error("AI returned an empty script.");
+    res.json({ success: true, genre: kind, language: lang, duration: mins, characters: cast, script });
+  } catch (e) {
+    console.error("Drama script error:", e);
+    res.status(500).json({ success: false, message: e.message || "Drama script failed." });
+  }
+});
+
+
+
+app.get("/api/drama/characters", authenticateUser, requireActiveSubscription, async (req, res) => {
+  try {
+    let characters;
+    if (pool) {
+      const result = await pool.query(
+        "SELECT id, name, age, appearance, clothing, genre, image_url, created_at FROM drama_characters WHERE user_id = $1 ORDER BY created_at DESC",
+        [String(req.user.id)]
+      );
+      characters = result.rows;
+    } else {
+      characters = loadDramaCharacters().filter(
+        c => c.user_id === String(req.user.id)
+      );
+    }
+    res.json({ success: true, characters });
+  } catch (error) {
+    console.error("Load drama characters error:", error);
+    res.status(500).json({ success: false, message: "Could not load saved characters." });
+  }
+});
+
+app.delete("/api/drama/characters/:id", authenticateUser, requireActiveSubscription, async (req, res) => {
+  try {
+    let deleted;
+    if (pool) {
+      const result = await pool.query(
+        "DELETE FROM drama_characters WHERE id = $1 AND user_id = $2 RETURNING id",
+        [req.params.id, String(req.user.id)]
+      );
+      deleted = result.rowCount > 0;
+    } else {
+      const characters = loadDramaCharacters();
+      const remaining = characters.filter(
+        c => !(c.id === req.params.id && c.user_id === String(req.user.id))
+      );
+      deleted = remaining.length !== characters.length;
+      if (deleted) {
+        fs.writeFileSync(dramaCharactersFile, JSON.stringify(remaining, null, 2));
+      }
+    }
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Character not found." });
+    }
+    res.json({ success: true, message: "Character deleted." });
+  } catch (error) {
+    console.error("Delete drama character error:", error);
+    res.status(500).json({ success: false, message: "Could not delete character." });
+  }
+});
+
+app.post("/api/drama/character-image", authenticateUser, requireActiveSubscription, async (req, res) => {
+  try {
+    const { name, age, appearance, clothing, genre = "Pakistani Drama" } = req.body || {};
+
+    if (![name, age, appearance, clothing].every(v => String(v || "").trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Character name, age, appearance and clothing are required."
+      });
+    }
+
+    const prompt = [
+      "Create a cinematic character reference portrait for a film.",
+      "Genre: " + String(genre).slice(0, 60),
+      "Character name: " + String(name).slice(0, 80),
+      "Age: " + String(age).slice(0, 30),
+      "Appearance: " + String(appearance).slice(0, 500),
+      "Clothing: " + String(clothing).slice(0, 300),
+      "Single character, full upper body, face clearly visible, realistic details,",
+      "neutral background, cinematic lighting, consistent costume, no text, 16:9."
+    ].join(" ");
+
+    const imageBuffer = await generateHordeImage(prompt);
+    const filename = "drama_character_" + Date.now() + ".jpg";
+    fs.writeFileSync(path.join(outputDir, filename), imageBuffer);
+
+    const character = {
+      id: require("crypto").randomUUID(),
+      user_id: String(req.user.id),
+      name: String(name).trim(),
+      age: String(age).trim(),
+      appearance: String(appearance).trim(),
+      clothing: String(clothing).trim(),
+      genre: String(genre).slice(0, 60),
+      image_url: "/outputs/" + filename
+    };
+
+    await saveDramaCharacter(character);
+
+    res.json({
+      success: true,
+      saved: true,
+      characterId: character.id,
+      name: character.name,
+      imageUrl: character.image_url
+    });
+  } catch (error) {
+    console.error("Drama character image error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Character image generation failed."
+    });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
@@ -2609,7 +2758,8 @@ app.post("/api/youtube/create-video", authenticateUser, requireActiveSubscriptio
 
     const safeVoice = [
       "ur-PK-UzmaNeural",
-      "ur-PK-AsadNeural"
+      "ur-PK-AsadNeural",
+      "en-US-AriaNeural"
     ].includes(voice)
       ? voice
       : "ur-PK-UzmaNeural";
