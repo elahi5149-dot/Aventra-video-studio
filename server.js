@@ -639,10 +639,12 @@ app.get("/api/plans", (req, res) => {
 // ============================
 
 app.post("/api/youtube/voice", authenticateUser, requireActiveSubscription, async (req, res) => {
+  let outputPath;
+
   try {
     const { text, voice = "ur-PK-UzmaNeural" } = req.body || {};
 
-    if (!text || !text.trim()) {
+    if (typeof text !== "string" || !text.trim()) {
       return res.status(400).json({
         success: false,
         message: "Text is required"
@@ -657,50 +659,66 @@ app.post("/api/youtube/voice", authenticateUser, requireActiveSubscription, asyn
     ].includes(voice) ? voice : "ur-PK-UzmaNeural";
 
     const filename = `youtube_voice_${Date.now()}.mp3`;
-    const outputPath = path.join(outputDir, filename);
+    outputPath = path.join(outputDir, filename);
 
-    const { spawn } = require("child_process");
+    const { execFile } = require("child_process");
+    const { promisify } = require("util");
+    const execFileAsync = promisify(execFile);
 
-    const process = spawn("python", [
-      "-m",
-      "edge_tts",
-      "--voice",
-      safeVoice,
-      "--text",
-      text,
-      "--write-media",
-      outputPath
-    ]);
+    let engine = "edge-tts";
 
-    let errorOutput = "";
+    try {
+      await execFileAsync("python", [
+        "-m", "edge_tts",
+        "--voice", safeVoice,
+        "--text", text,
+        "--write-media", outputPath
+      ], { timeout: 120000, maxBuffer: 1024 * 1024 });
 
-    process.stderr.on("data", data => {
-      errorOutput += data.toString();
-    });
+      if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+        throw new Error("Edge TTS produced no audio");
+      }
+    } catch (edgeError) {
+      console.warn("Edge TTS failed; trying gTTS fallback:", edgeError.message);
 
-    process.on("close", code => {
-      if (code !== 0 || !fs.existsSync(outputPath)) {
-        console.error("Edge TTS error:", errorOutput);
-
-        return res.status(500).json({
-          success: false,
-          message: "Voice generation failed"
-        });
+      if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
       }
 
-      res.json({
-        success: true,
-        voice: safeVoice,
-        audioUrl: `/outputs/${filename}`
-      });
+      const language = safeVoice.startsWith("en-") ? "en" : "ur";
+
+      await execFileAsync("python", [
+        path.join(__dirname, "gtts_fallback.py"),
+        language,
+        text,
+        outputPath
+      ], { timeout: 120000, maxBuffer: 1024 * 1024 });
+
+      if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+        throw new Error("gTTS produced no audio");
+      }
+
+      engine = "gTTS";
+    }
+
+    return res.json({
+      success: true,
+      voice: safeVoice,
+      engine,
+      audioUrl: `/outputs/${filename}`
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Voice generation failed:", error.message);
 
-    res.status(500).json({
+    if (outputPath && fs.existsSync(outputPath)) {
+      try {
+        fs.unlinkSync(outputPath);
+      } catch (_) {}
+    }
+
+    return res.status(500).json({
       success: false,
-      message: error.message
+      message: "Voice generation failed. Please try again."
     });
   }
 });
