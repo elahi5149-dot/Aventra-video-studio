@@ -620,6 +620,9 @@ body.auth-locked .feature-nav {
     <div id="dramaStatus" role="status" style="margin-top:12px;"></div>
     <textarea id="dramaOutput" rows="14" readonly placeholder="Your AI drama script will appear here..." style="width:100%;margin-top:12px;padding:10px;box-sizing:border-box;"></textarea>
     <button type="button" id="copyDramaBtn" style="width:100%;padding:10px;">📋 Copy Script</button>
+
+    <button type="button" id="sendDramaToVoiceBtn" style="width:100%;padding:10px;margin-top:8px;">🎙️ Send Script to Voice Studio</button>
+    <button type="button" id="downloadDramaTxtBtn" style="width:100%;padding:10px;margin-top:8px;">📥 Download Drama Script (.txt)</button>
   </div>
 
 
@@ -4751,6 +4754,54 @@ async function startSafepayCheckout(button, plan) {
 })();
 </script>
 \n
+
+<script id="dramaExportHandler">
+(() => {
+  const $ = id => document.getElementById(id);
+
+  $('sendDramaToVoiceBtn').addEventListener('click', () => {
+    const script = $('dramaOutput').value.trim();
+    if (!script) {
+      $('dramaStatus').textContent = '⚠️ پہلے ڈرامے کا اسکرپٹ تیار کریں۔';
+      return;
+    }
+
+    const voiceText = $('dialogueVoiceText');
+    if (!voiceText) {
+      $('dramaStatus').textContent = '❌ Dialogue Voice Studio نہیں ملا۔';
+      return;
+    }
+
+    voiceText.value = script.slice(0, 5000);
+    $('dialogueVoiceStudio').scrollIntoView({behavior: 'smooth'});
+    $('dialogueVoiceStatus').textContent = script.length > 5000
+      ? '⚠️ صرف پہلے 5000 حروف منتقل ہوئے ہیں۔'
+      : '✅ اسکرپٹ منتقل ہوگیا۔ آواز بنانے سے پہلے متن چیک کرلیں۔';
+  });
+
+  $('downloadDramaTxtBtn').addEventListener('click', () => {
+    const script = $('dramaOutput').value.trim();
+    if (!script) {
+      $('dramaStatus').textContent = '⚠️ پہلے ڈرامے کا اسکرپٹ تیار کریں۔';
+      return;
+    }
+
+    const blob = new Blob(['\uFEFF', script], {
+      type: 'text/plain;charset=utf-8'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'aventra-drama-script.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    $('dramaStatus').textContent = '✅ اسکرپٹ ڈاؤن لوڈ شروع ہوگیا۔';
+  });
+})();
+</script>
+
 <script id="characterStudioHandler">
 (() => {
   const $ = id => document.getElementById(id);
